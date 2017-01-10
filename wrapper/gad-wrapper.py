@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import argparse
 import json
 import os.path
@@ -58,6 +60,33 @@ if not(os.path.exists(args.inputImage)):
 
 # TODO: Do other pre checkings here...
 
+
+#Check if there is the file is
+
+def checkWhatFileType():
+	if(args.ios):
+		return ".ipa";
+	elif(args.html):
+		return ".html"
+	elif(args.android):
+		return ".txt"
+
+def checkIfDirExists():
+	newFolder = args.outputPath + "/" + args.projectName
+	fileName = checkWhatFileType()
+	if not os.path.exists(args.outputPath):
+		print("there is no such directory!!")
+		os.makedirs(newFolder)
+		f = open(newFolder+"/testFil" + fileName, "w+").close
+		print(newFolder)
+	else:
+		print("this path is already taken, try another")
+	return;
+
+checkIfDirExists()
+
+
+
 """
 print("File exists")
 im = Image.open(args.inputImage)
@@ -77,5 +106,3 @@ with open(args.inputImage, "r+") as f: # with keyword instead of try catch
 
 
 # TODO: Call the transpiler here...
-
-
