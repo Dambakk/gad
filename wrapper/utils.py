@@ -13,13 +13,13 @@ def checkWhatFileType(args):
 def checkIfDirExists(args):
 	newFolder = args.outputPath + "/" + args.projectName
 	fileName = checkWhatFileType(args)
-	if not os.path.exists(args.outputPath):
+	if not os.path.exists(args.outputPath) or not os.path.exists(newFolder):
 		print("Creating a folder " + newFolder + " in " + args.outputPath)
 		os.makedirs(newFolder)
 		f = open(newFolder+"/testFil" + fileName, "w+").close
 		print(newFolder)
 	else:
-		#As user if he wants to overwrite what is already there?
+		#Ask user if he wants to overwrite what is already there?
 		answer = input("Are you sure you want to overwrite? (y/n) ")
 		print("Your answer: " + answer)
 		print("this path is already taken, try another")

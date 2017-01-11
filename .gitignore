@@ -2,3 +2,4 @@
 *.txt
 *.DS_Store
 *.png
+__pycache__
