@@ -22,7 +22,7 @@ width, height = image.size
 print(width)
 print(height)
 print(pixels)
-mydict = {}
+mydict = []
 number = 0
 
 for x in range(0, height):
@@ -32,12 +32,12 @@ for x in range(0, height):
         print(r,g,b, "    ", x, y)
         if (r and g and b != 255):
             print("heello")
-            mydict[r,g,b] = x,y
+            myitem = (x, y, " ", r,g,b)
+            mydict.append(myitem)
             number += 1
 
     print(" ")
 
-sorted(mydict.values())
 
 print(mydict)
 print(number)
