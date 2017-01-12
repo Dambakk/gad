@@ -1,3 +1,4 @@
+#!/usr/local/bin/env python3
 import argparse
 from PIL import Image, ImageFilter
 
@@ -24,13 +25,17 @@ print(height)
 print(pixels)
 mydict = []
 number = 0
+dictionary = {}
 
 for x in range(0, height):
     for y in range(0, width):
-        #print(x, y)
         r,g,b = image.getpixel((y, x))
         print(r,g,b, "    ", x, y)
         if (r and g and b != 255):
+            try:
+                dictionary[r,g,b].append((x,y))
+            except KeyError:
+                dictionary[r,g,b] = [(x,y)]
             print("heello")
             myitem = (x, y, " ", r,g,b)
             mydict.append(myitem)
@@ -39,8 +44,11 @@ for x in range(0, height):
     print(" ")
 
 
-print(mydict)
+#print(mydict)
+print(dictionary)
 print(number)
+
+print(len(dictionary))
 
 
 
