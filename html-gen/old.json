@@ -1,0 +1,30 @@
+
+
+
+/*
+{
+	"elements": [
+		{
+			"type": "div",
+			"content": "some text"
+		}, {
+			"type": "p",
+			"content": "some other text"
+		}
+	]
+}
+*/
+
+
+/*
+{
+	"type": "div", 
+	"content" : [
+		{
+			"type":"p",
+			"content":"blablabla"
+		},
+		"some text"
+	]
+}
+*/
