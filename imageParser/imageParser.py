@@ -10,7 +10,7 @@ def parseImage(path):
     pixels = image.load()
     width, height = image.size
     print("Received image ")
-    image.show()
+    #image.show()
 
 
     
