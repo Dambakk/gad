@@ -4,12 +4,14 @@ import argparse
 import json
 import os.path
 from PIL import Image
-import utils
+from wrapper import wrapperUtils 
+from  htmlGen import htmlGen
+from imageParser import imageParser
 
 
 parser = argparse.ArgumentParser()
 
-parser = utils.argparserSetup(parser)
+parser = wrapperUtils.argparserSetup(parser)
 
 args = parser.parse_args()
 
@@ -33,7 +35,6 @@ print("")
 print("Reading file...")
 print("")
 
-x = [1, "simple", "list"] #A JSON example
 
 if not(args.inputImage.lower().endswith(".png")):
 	print("File should be an image file (png)")
@@ -50,15 +51,18 @@ if not(os.path.exists(args.inputImage)):
 #Check if there is the file is
 
 
-utils.checkIfDirExists(args)
+wrapperUtils.checkIfDirExists(args)
 
-
-print("DONE!")
-
+fullPath = os.path.abspath(args.inputImage)
+print("file path to image: " + fullPath)
 
 
 # TODO: Call the image parser here....
+imageParser.parseImage(fullPath)
 
 
 
 # TODO: Call the transpiler here...
+
+
+print("Done")
