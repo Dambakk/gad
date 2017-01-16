@@ -14,27 +14,23 @@ args = ap.parse_args()
 
 
 
-def parseJson(jsonPath, title, outputPath):
-	print("JSON Path:  " + jsonPath)
+def parseJson(jsonStructure, title, outputPath):
 
-	if os.path.isfile(jsonPath):
-		file = open(outputPath + "/index.html", "w+")
+	file = open(outputPath + "/index.html", "w+")
 
-		with open(jsonPath) as json_data:
-			data = json.load(json_data)
-			htmlUtils.prepareHTML(file, title)
+	htmlUtils.prepareHTML(file, title)
 
-			for element in data:
-				type = element["type"]
-				content = element["content"]
-				color = element["color"]
-				print(type + " - " + content)
-				htmlUtils.insertElement(type, content, color, file)
+	for element in jsonStructure:
+		type = element["type"]
+		content = element["content"]
+		color = element["color"]
+		print(type + " - " + content)
+		htmlUtils.insertElement(type, content, color, file)
 
-			htmlUtils.endHTML(file)
+	htmlUtils.endHTML(file)
 
 
-		file.close();
-		print("HTML generator done")
+	file.close();
+	print("HTML generator done")
 
 	

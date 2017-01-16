@@ -58,15 +58,12 @@ print("file path to image: " + fullPath)
 
 
 # TODO: Call the image parser here....
-imageParser.parseImage(fullPath)
+jsonStructure = imageParser.parseImage(fullPath)
 
 
 
 # TODO: Call the transpiler here...
-jsonFile = "json-ex.json"
-fullJsonPath = os.path.abspath(jsonFile)
-print("Full JSON path: " + fullJsonPath)
-htmlGen.parseJson(fullJsonPath, args.projectName, args.outputPath +  "/" + args.projectName)
+htmlGen.parseJson(jsonStructure, args.projectName, args.outputPath +  "/" + args.projectName)
 
 
 print("Done")
