@@ -2,6 +2,8 @@ import argparse
 import json
 from htmlGen import htmlUtils
 import os.path
+
+
 """
 ap = argparse.ArgumentParser()
 ap.add_argument("JSONpath", help="Path to JSON structure")
@@ -12,27 +14,27 @@ args = ap.parse_args()
 
 
 
-"""
-print("JSON Path:  " + args.JSONpath)
+def parseJson(jsonPath, title, outputPath):
+	print("JSON Path:  " + jsonPath)
 
-if os.path.isfile(args.JSONpath):
-	file = open("index.html", "w+")
+	if os.path.isfile(jsonPath):
+		file = open(outputPath + "/index.html", "w+")
 
-	with open(args.JSONpath) as json_data:
-		data = json.load(json_data)
-		htmlUtils.prepareHTML(file, args.title)
+		with open(jsonPath) as json_data:
+			data = json.load(json_data)
+			htmlUtils.prepareHTML(file, title)
 
-		for element in data:
-			type = element["type"]
-			content = element["content"]
-			color = element["color"]
-			print(type + " - " + content)
-			htmlUtils.insertElement(type, content, color, file)
+			for element in data:
+				type = element["type"]
+				content = element["content"]
+				color = element["color"]
+				print(type + " - " + content)
+				htmlUtils.insertElement(type, content, color, file)
 
-		htmlUtils.endHTML(file)
+			htmlUtils.endHTML(file)
 
 
-	file.close();
-	print("Done")
+		file.close();
+		print("HTML generator done")
 
-	"""
+	

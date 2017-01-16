@@ -100,11 +100,6 @@ def MakingJSONObject(squareResult, hexVal, sStart, newList):
     return newList
 
 
-
-
-
-
-
 """
 ap = argparse.ArgumentParser()
 ap.add_argument("ImagePath", help="Path to image")
