@@ -5,7 +5,7 @@ import json
 import os.path
 from PIL import Image
 from wrapper import wrapperUtils 
-from  htmlGen import htmlGen
+import htmlGen
 from imageParser import imageParser
 from colorama import Fore, Back, Style
 

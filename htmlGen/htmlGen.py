@@ -1,9 +1,4 @@
 import argparse
-import json
-import htmlUtils
-import os.path
-from colorama import Fore, Back, Style
-
 
 def parseJson(jsonPath, title, outputPath, debug):
 	if debug: print("Running json parser...")
@@ -46,14 +41,16 @@ def parseJson(jsonPath, title, outputPath, debug):
 		print(Fore.GREEN + "HTML generator done" + Fore.RESET)
 
 
-#Initialize argument parser
-ap = argparse.ArgumentParser()
-ap.add_argument("JSONpath", help="Path to JSON structure")
-ap.add_argument("title", help="The title of the web page")
-ap.add_argument("outputPath", help="Output directory")
-ap.add_argument("-v", "--verbose", help="Verbose output", action="store_true", default=False)
-args = ap.parse_args()
+if __name__== "__main__":
 
-#Start the parser
-parseJson(args.JSONpath, args.title, args.outputPath, args.verbose)
+	#Initialize argument parser
+	ap = argparse.ArgumentParser()
+	ap.add_argument("JSONpath", help="Path to JSON structure")
+	ap.add_argument("title", help="The title of the web page")
+	ap.add_argument("outputPath", help="Output directory")
+	ap.add_argument("-v", "--verbose", help="Verbose output", action="store_true", default=False)
+	args = ap.parse_args()
+
+	#Start the parser
+	parseJson(args.JSONpath, args.title, args.outputPath, args.verbose)
 
