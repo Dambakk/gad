@@ -2,6 +2,7 @@
 import os.path
 import argparse
 
+#TODO: Need a better way to generate file endings. Maybe only generate file endings when creating necessary files
 def checkWhatFileType(args):
 	if(args.ios):
 		return ".ipa";
@@ -10,6 +11,8 @@ def checkWhatFileType(args):
 	elif(args.android):
 		return ".txt"
 
+
+#TODO: Needs work...
 def checkIfDirExists(args):
 	newFolder = args.outputPath + "/" + args.projectName
 	fileName = checkWhatFileType(args)
@@ -27,7 +30,6 @@ def checkIfDirExists(args):
 
 
 def argparserSetup(parser):
-
 	parser.add_argument("inputImage", help="Path to the image to generate GUI from")
 	parser.add_argument("outputPath", help="Path to where the generated project will be")
 	parser.add_argument("projectName", help="Name of the project")
@@ -37,11 +39,6 @@ def argparserSetup(parser):
 	platform.add_argument("--html", help="Create a html web page", action="store_true")
 	platform.add_argument("--android", help="Create an android project", action="store_true")
 
-	logging = parser.add_mutually_exclusive_group(required=False)
-	logging.add_argument("-s", "--silent", help="Silent output level", action="store_true", default=False)
-	logging.add_argument("-d", "--default", help="Default ouput level", action="store_true", default=False)
-	logging.add_argument("-v", "--verbose", help="Verbose output level", action="store_true", default=False)
-
-	parser.add_argument("--debug", help="Run in debug mode", default=False)
+	parser.add_argument("-v", "--verbose", help="Verbose output level", action="store_true", default=False)
 
 	return parser

@@ -12,9 +12,11 @@ def endHTML(file):
 	file.write("</html>")
 
 
-def insertElement(type, content, color, file):
+def insertElement(type, content, color, x, y, w, h, file):
 	file.write("<" + type )
-	file.write(" style='background-color:" + color + ";'" )
+	file.write(" style='background-color:" + color + "; margin-left:"+ str(x) + "px; margin-top:"+str(y) + "px;'" )
+	file.write(" width='" + str(w) + "'" )
+	file.write(" height='" + str(h) + "'" )
 	file.write(">")
 	file.write(content)
 	file.write("</" + type + ">\n")
