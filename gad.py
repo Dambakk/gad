@@ -4,7 +4,7 @@ import argparse
 import json
 import os.path
 from PIL import Image
-from wrapper import wrapperUtils 
+from wrapper import wrapperUtils
 from  htmlGen import htmlGen
 from imageParser import imageParser
 
