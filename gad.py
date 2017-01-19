@@ -6,7 +6,7 @@ import os.path
 from PIL import Image
 
 from wrapper import wrapperUtils 
-import htmlGen
+from htmlGen import htmlGen
 from imageParser import imageParser
 from colorama import Fore, Back, Style
 
@@ -34,9 +34,9 @@ fullPath = os.path.abspath(args.inputImage)
 if args.verbose: print(Fore.YELLOW + "Full file path to image: "+ Style.RESET_ALL + fullPath)
 
 #Read the image and create a JSON structure
-jsonStructure = imageParser.parseImage(fullPath)
+pathToJson = imageParser.parseImage(fullPath, args.outputPath)
 
 #Generate html according to the JSON 
-htmlGen.parseJson(jsonStructure, args.projectName, args.outputPath +  "/" + args.projectName, args.verbose)
+htmlGen.parseJson(pathToJson + "/testFil.json", args.projectName, args.outputPath +  "/" + args.projectName, args.verbose)
 
 print(Fore.GREEN + "Done" + Style.RESET_ALL)

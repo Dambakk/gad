@@ -3,11 +3,7 @@ import os
 import argparse
 import json
 from PIL import Image, ImageFilter
-
-
-
-
-
+from colorama import Fore, Back, Style
 
 
 
@@ -15,7 +11,7 @@ def parseImage(path, outputPath):
     image = Image.open(path)
     pixels = image.load()
     width, height = image.size
-    print("Received image ")
+    #print("Received image ")
 
     mydict = []
     dictionary = {}
@@ -25,7 +21,7 @@ def parseImage(path, outputPath):
 
     newList = []
 
-    print(len(newDict))
+    #print(len(newDict))
 
     for i in range(len(newDict)):
 
@@ -40,9 +36,9 @@ def parseImage(path, outputPath):
 
         hexVal = ConvertToHex(rgbColor)
 
-        MakingJSONObject(squareResult, hexVal, sStart, newList, outputPath)
+        jsonPath = MakingJSONObject(squareResult, hexVal, sStart, newList, outputPath)
 
-    return newList
+    return jsonPath
 
 # RGBA, not taking into account the a, yet which will be the transparent parameter
 def MyFunc(dictionary, height, width, image, mydict):
@@ -50,7 +46,7 @@ def MyFunc(dictionary, height, width, image, mydict):
     for x in range(0, height):
         for y in range(0, width):
             r,g,b,a = image.getpixel((y, x))
-            print(r,g,b, "    ", x, y)
+            #print(r,g,b, "    ", x, y)
             if (r != 255 or g != 255 or b != 255):
                 try:
                     dictionary[r,g,b].append([x,y])
@@ -59,7 +55,7 @@ def MyFunc(dictionary, height, width, image, mydict):
                 myitem = (x, y, " ", r,g,b)
                 mydict.append(myitem)
                 number += 1
-        print(" ")
+        #print(" ")
     return dictionary
 
 
@@ -67,8 +63,8 @@ def FindSquare(sStart, sEnd):
     tHeight = sEnd[0] - sStart[0]
     tWidth = sEnd[1] - sStart[1]
 
-    print(tHeight)
-    print(tWidth)
+    #print(tHeight)
+    #print(tWidth)
 
     tup1 = (tHeight, tWidth)
     return tup1
@@ -91,7 +87,7 @@ def MakingJSONObject(squareResult, hexVal, sStart, newList, outputPath):
     data['width'] = squareResult[1]
     data['height'] = squareResult[0]
     newList.append(data)
-    if not os.path.exists(args.outputPath):
+    if not os.path.exists(outputPath):
         os.makedirs(outputPath)
         f = open(outputPath+"/testFil.json", "w+")
         json.dump(newList, f)
@@ -110,7 +106,7 @@ if __name__== "__main__":
     ap.add_argument("outputPath", help="Path to output directory")
     args = ap.parse_args()
 
-    print(args.inputImage)
+    #print(args.inputImage)
 
     if not(args.inputImage.lower().endswith(".png")):
     	print("File should be an image file (png)")
