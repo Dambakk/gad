@@ -1,4 +1,5 @@
 import argparse
-from htmlGen import htmlGen
+import htmlGen
 from htmlGen import htmlUtils
+from htmlGen import htmlGenerator
 #import htmlUtils

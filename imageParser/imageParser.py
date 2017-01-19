@@ -5,23 +5,30 @@ import json
 from PIL import Image, ImageFilter
 from colorama import Fore, Back, Style
 
+#Constants
+HTML = 0
+IOS = 1
+ANDROID = 2
+
+# Colors with the corresponding types
+colorTypes = {}
+colorTypes['#15aaff'] = ('div', 'iOsType', 'javaType') # blue
+colorTypes['#fb0007'] = ('p', 'iOsType', 'javaType') # red
 
 
-def parseImage(path, outputPath):
+def parseImage(path, outputPath, platform, debug):
     image = Image.open(path)
     pixels = image.load()
     width, height = image.size
-    #print("Received image ")
+
+    if debug : print(Fore.YELLOW + "Image loaded successfully" + Style.RESET_ALL)
 
     mydict = []
     dictionary = {}
 
     newDict = MyFunc(dictionary, height, width, image, mydict)
 
-
     newList = []
-
-    #print(len(newDict))
 
     for i in range(len(newDict)):
 
@@ -36,7 +43,7 @@ def parseImage(path, outputPath):
 
         hexVal = ConvertToHex(rgbColor)
 
-        jsonPath = MakingJSONObject(squareResult, hexVal, sStart, newList, outputPath)
+        jsonPath = MakingJSONObject(squareResult, hexVal, sStart, newList, outputPath, platform)
 
     return jsonPath
 
@@ -75,12 +82,22 @@ def ConvertToHex(rgbColor):
     return hexValue
 
 
+def getType(color, platform):
+    if colorTypes.get(color):
+        return colorTypes[color][platform]
+    else: 
+        print(Fore.RED + "Color is not known and ignored: " +  Style.RESET_ALL + color)
+        return None 
 
-def MakingJSONObject(squareResult, hexVal, sStart, newList, outputPath):
+
+
+def MakingJSONObject(squareResult, hexVal, sStart, newList, outputPath, platform):
 
     data = {}
-    data['type'] = 'div'
-    data['content'] = "Hei"
+    #data['type'] = 'div'
+    data['type'] = getType(hexVal, platform) # color, targetPlatform
+    if data['type'] is None: return
+    data['content'] = "Color code: " + hexVal
     data['color'] = hexVal
     data['y'] = sStart[0]
     data['x'] = sStart[1]
@@ -89,33 +106,45 @@ def MakingJSONObject(squareResult, hexVal, sStart, newList, outputPath):
     newList.append(data)
     if not os.path.exists(outputPath):
         os.makedirs(outputPath)
-        f = open(outputPath+"/testFil.json", "w+")
+        f = open(outputPath+"/imageRepresentation.json", "w+")
         json.dump(newList, f)
         f.close
     else:
-        f = open(outputPath+"/testFil.json", "w+")
+        f = open(outputPath+"/imageRepresentation.json", "w+")
         json.dump(newList, f)
         f.close
 
-    return outputPath
+    return outputPath + "/imageRepresentation.json"
 
 
 if __name__== "__main__":
     ap = argparse.ArgumentParser()
+    
     ap.add_argument("inputImage", help="Path to selected image")
     ap.add_argument("outputPath", help="Path to output directory")
+
+    platform = ap.add_mutually_exclusive_group(required=True)
+    platform.add_argument("--ios", help="Create a iOs project", action="store_true")
+    platform.add_argument("--html", help="Create a html web page", action="store_true")
+    platform.add_argument("--android", help="Create an android project", action="store_true")
+
+    ap.add_argument("-v", "--verbose", help="Verbose output level", action="store_true", default=False)
+
     args = ap.parse_args()
 
-    #print(args.inputImage)
-
     if not(args.inputImage.lower().endswith(".png")):
-    	print("File should be an image file (png)")
+    	print(Fore.RED + "File should be an image file (png)." + Style.RESET_ALL)
     else:
         path = os.path.abspath(args.inputImage)
         outputPath = os.path.abspath(args.outputPath)
-        parseImage(path, outputPath)
+        platform = -1
+        if args.ios: 
+            platform = IOS
+        elif args.html:
+            platform = HTML 
+        elif args.android:
+            platform = ANDROID
+        parseImage(path, outputPath, platform, args.verbose)
 
 
-
-
-print("Done")
+print(Fore.GREEN + "Image parser: " + Style.RESET_ALL +"Done" )
