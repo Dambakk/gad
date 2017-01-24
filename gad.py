@@ -6,6 +6,8 @@ import os.path
 from PIL import Image
 
 from wrapper import wrapperUtils 
+from htmlGen import htmlGenerator as gen
+#from htmlGen import htmlGenerator
 #from htmlGen import htmlGenerator
 import htmlGen
 from imageParser import imageParser
@@ -44,8 +46,15 @@ if args.verbose: print(Fore.YELLOW + "Full file path to image: "+ Style.RESET_AL
 
 #Read the image and create a JSON structure
 pathToJson = imageParser.parseImage(fullPath, args.outputPath, platform, args.verbose)
+print("Image parser: " + Fore.GREEN + "Done" + Style.RESET_ALL)
+print("")
+print("")
 
 #Generate html according to the JSON 
-htmlGenerator.parseJson(pathToJson, args.projectName, args.outputPath +  "/" + args.projectName, args.verbose)
+gen.parseJson(pathToJson, args.projectName, args.outputPath +  "/" + args.projectName, args.verbose, True)
+#htmlGen.htmlGenerator.parseJson(pathToJson, args.projectName, args.outputPath +  "/" + args.projectName, args.verbose)
+print("HTML generator: " + Fore.GREEN + "Done" + Style.RESET_ALL)
+print("")
+print("")
 
 print(Fore.GREEN + "All done" + Style.RESET_ALL)

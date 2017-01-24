@@ -4,7 +4,10 @@ import argparse
 import json
 from PIL import Image, ImageFilter
 from colorama import Fore, Back, Style
+import configparser
 
+
+pathToConfig = "imageParser/colorTypes.ini"
 #Constants
 HTML = 0
 IOS = 1
@@ -12,8 +15,8 @@ ANDROID = 2
 
 # Colors with the corresponding types
 colorTypes = {}
-colorTypes['#15aaff'] = ('div', 'iOsType', 'javaType') # blue
-colorTypes['#fb0007'] = ('p', 'iOsType', 'javaType') # red
+#colorTypes['#15aaff'] = ('div', 'iOsType', 'javaType') # blue
+#colorTypes['#fb0007'] = ('p', 'iOsType', 'javaType') # red
 
 
 def parseImage(path, outputPath, platform, debug):
@@ -22,6 +25,16 @@ def parseImage(path, outputPath, platform, debug):
     width, height = image.size
 
     if debug : print(Fore.GREEN + "Image loaded successfully" + Style.RESET_ALL)
+
+    Config = configparser.RawConfigParser()
+    Config.read(pathToConfig)
+    print()
+    if debug : 
+        print(Fore.GREEN + "Config files loaded successfully" + Style.RESET_ALL)
+        #print("Sections: " + Config.sections())
+
+    readConfigFile(Config)
+
 
     mydict = []
     dictionary = {}
@@ -37,7 +50,7 @@ def parseImage(path, outputPath, platform, debug):
 
     #print(newDict)
 
-    jsonPath = makeJSONObjects(finalDictionary)
+    jsonPath = makeJSONObjects(finalDictionary, outputPath)
 
     """
     for i in range(len(newDict)):
@@ -58,6 +71,15 @@ def parseImage(path, outputPath, platform, debug):
 
     print(jsonPath)
     return jsonPath
+
+
+def readConfigFile(config):
+    options = config.options("color")
+    for option in options:
+        colorTypes["#" + option] = eval(config.get("color", option))
+
+    #Put other readings here...
+
 
 # RGBA, not taking into account the a, yet which will be the transparent parameter
 def MyFunc(dictionary, height, width, image, mydict):
@@ -162,7 +184,7 @@ def getType(color, platform):
         print(Fore.RED + "Color is not known and ignored: " +  Style.RESET_ALL + color)
         return None
 
-def makeJSONObjects(finalDictionary):
+def makeJSONObjects(finalDictionary, outputPath):
 
     objects = []
 
@@ -194,18 +216,19 @@ def makeJSONObjects(finalDictionary):
 
         print(hexValue)
 
-        path = makeJSONObjectsFinal(newList, hexValue, mnewList)
+        path = makeJSONObjectsFinal(newList, hexValue, mnewList, outputPath)
 
     return path
 
 
-def makeJSONObjectsFinal(item, hexValue, newList):
+def makeJSONObjectsFinal(item, hexValue, newList, outputPath):
     data = {}
     #data['type'] = 'div'
     #data['type'] = getType(hexVal, platform) # color, targetPlatform
     #if data['type'] is None: return
     data['content'] = "Color code: " + hexValue
     data['color'] = hexValue
+    data['type'] = getType(hexValue, 0)
     data['y'] = item[0][0]
     print(item[0][0])
     data['x'] = item[0][1]
@@ -328,6 +351,8 @@ if __name__== "__main__":
 
     args = ap.parse_args()
 
+    pathToConfig = "colorTypes.ini"
+
     if not(args.inputImage.lower().endswith(".png")):
     	print(Fore.RED + "File should be an image file (png)." + Style.RESET_ALL)
     else:
@@ -341,6 +366,6 @@ if __name__== "__main__":
         elif args.android:
             platform = ANDROID
         parseImage(path, outputPath, platform, args.verbose)
+    print("Image parser: " + Fore.GREEN + "Done" + Style.RESET_ALL)
 
 
-print(Fore.GREEN + "Image parser: " + Style.RESET_ALL +"Done" )

@@ -5,7 +5,7 @@ import os.path
 #import htmlUtils
 from colorama import Fore, Back, Style
 
-def parseJson(jsonPath, title, outputPath, debug):
+def parseJson(jsonPath, title, outputPath, debug, externalRun=False):
 	if debug: print("Running json parser...")
 	
 	#Open JSON file and load content
@@ -22,6 +22,9 @@ def parseJson(jsonPath, title, outputPath, debug):
 
 		#Open/create the index html file
 		file = open(outputPath + "/index.html", "w")
+
+		if externalRun : from htmlGen import htmlUtils 
+		else : import htmlUtils
 
 		#Prepare html file (add head, title, body, etc)
 		htmlUtils.prepareHTML(file, title)
@@ -47,6 +50,8 @@ def parseJson(jsonPath, title, outputPath, debug):
 
 
 if __name__== "__main__":
+
+	# import htmlUtils
 
 	#Initialize argument parser
 	ap = argparse.ArgumentParser()
