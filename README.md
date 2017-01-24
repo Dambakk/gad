@@ -61,3 +61,13 @@ Tertiary goals
 
 ### TODO: insert how-to-use instructions, etc
 
+Color codes and corresponding types
+===============
+
+| Color   	| HTML-tag 	| iOS-type 	| Android-type 	|
+|---------	|----------	|----------	|--------------	|
+| #15aaff 	| div    	| iOS-type 	| Java-type    	|
+| #fb0007 	| p      	| iOS-type 	| Java-type    	|
+| #ffff00 	| h1     	| iOS-type 	| Java-type    	|
+| #008000 	| img    	| iOS-type 	| Java-type    	|
+
