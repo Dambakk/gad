@@ -31,9 +31,9 @@ def parseImage(path, outputPath, platform, debug):
 
     finalDictionary = newDict[1]
 
-    print(finalDictionary)
+    print(finalDictionary, " is the final dict")
 
-    newList = []
+    #newList = []
 
     #print(newDict)
 
@@ -85,7 +85,7 @@ def MyFunc(dictionary, height, width, image, mydict):
                     if(RGB != currentColor):
                         zValue = FindZValue(zValue, x, y, image, newDictionary, RGB, isWhite)
                         currentColor = RGB
-                        print(zValue)
+                        #print(zValue)
                     isWhite = ReturnElement(newDictionary, x, y, image, number, RGB, zValue, isWhite)
 
                 #myitem = (x, y, " ", r,g,b)
@@ -176,30 +176,53 @@ def makeJSONObjects(finalDictionary):
         print(num2)
 
         findTheSquares(num2, squaresList)
-
+        print("we are here")
         objects.append([rgbColor, squaresList])
         #objects.append([rgbColor, squaresList])
 
-    print(objects[0])
 
-    JSONList = objects[0]
-    hexValue = ConvertToHex(JSONList.pop(0))
+    #print(objects)
+    #print(objects[0], " objektslitsa")
 
-    print(len(JSONList[0]))
+    JSONList = objects
+    #hexValue = ConvertToHex(JSONList.pop(0))
 
-    while(len(JSONList[0]) != 0):
+    print(JSONList, " total liste")
 
-        newList = JSONList[0].pop(0)
-        print(newList)
+    print(len(JSONList), " lengden av lista")
 
-        print(hexValue)
+    while(len(JSONList) != 0):
+        theFinalList = JSONList.pop(0)
 
-        path = makeJSONObjectsFinal(newList, hexValue, mnewList)
+        firstValue = theFinalList.pop(0)
+        #print(firstElement, "First Element")
+        secondValue = theFinalList[0]
+        print(secondValue, " secondvalue")
+        print(len(secondValue))
+
+        hexValue = ConvertToHex(firstValue)
+
+        for i in range(len(secondValue)):
+
+            first = secondValue[i][0]
+            print(first, " fiiiirst")
+
+            second = secondValue[i][1]
+            print(second ," seeeeeecond")
+            third = secondValue[i][2]
+            print(third, " thhhhhi")
+            fourth = secondValue[i][3]
+            print(fourth, "   asfasdf")
+            print(secondValue)
+
+            newList = [first, second, third, fourth]
+            path = makeJSONObjectsFinal(newList, hexValue, mnewList)
+
 
     return path
 
 
-def makeJSONObjectsFinal(item, hexValue, newList):
+def makeJSONObjectsFinal(item, hexValue, mnewList):
     data = {}
     #data['type'] = 'div'
     #data['type'] = getType(hexVal, platform) # color, targetPlatform
@@ -212,16 +235,17 @@ def makeJSONObjectsFinal(item, hexValue, newList):
     print(item[0][1])
     data['width'] = item[1][1] - item[0][1]
     data['height'] = item[2][0] - item[0][0]
-    newList.append(data)
+    mnewList.append(data)
     if not os.path.exists(outputPath):
         os.makedirs(outputPath)
         f = open(outputPath+"/imageRepresentation.json", "w+")
-        json.dump(newList, f)
+        json.dump(mnewList, f)
         f.close
     else:
         f = open(outputPath+"/imageRepresentation.json", "w+")
-        json.dump(newList, f)
+        json.dump(mnewList, f)
         f.close
+    print(mnewList)
 
     return outputPath + "/imageRepresentation.json"
 
