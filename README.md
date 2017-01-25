@@ -3,6 +3,8 @@
 
 This is the bachelor thesis for Einar Johnsen and Christopher Dambakk, University of Agder, spring 2017.
 
+**Tool usage documentation further down**
+
 Motivation
 ==========
 
@@ -18,21 +20,16 @@ Our solution will - given a idealized image of the graphical user interface (GUI
 Primary goals
 =============
 
--   Create a detailed project schedule with deliverables and demos.
+-   Create a simple, extendable definition for all common UI elements.
 
--   Create a simple, extendable semantics for all common UI elements (e.g. a JSON structure)
+-   Create a command line interface (CLI) tool that reads png images and pairs any app design contained to a structured representation.
 
--   Create a CLI (command line interface) tool that reads png images and pares any app design contained to a semantic representation.
-
--   Create a CLI transpiler to a selected platform. (e.g. iOs, Android, HTML, etc)
+-   Create a CLI transpiler to a selected platform. (e.g. iOS, Android, HTML, etc).
 
 -   Write documentation for tool usage.
 
-Each tool should offer different levels of logging output (silent, default, verbose) and offer reasonable error messages.
+-   Support different levels of output logging and offer reasonable error messages.
 
-Code that is generated should follow good naming conventions and avoud uninformative names, like *label\_1* or *textbox3* etc. This will require some sort of analysis or meta information solution.
-
-The tools must work primarly on OS X and Linux. Windows and other operating systems are not a priority.
 
 Secondary goals
 ===============
@@ -41,25 +38,31 @@ Secondary goals
 
 -   Extend the solution to handle more than one target platform and as many UI elements as possible.
 
--   The tool chain should be possible to run multiple times without destroying work that has been manually done. It should also be possible for the designer to update the drawings and add/change UI elements and add those to the project in a non destructive manner.
+-   It should be possible to run the tool chain multiple times without destroying work that has been manually done. It should also be possible for the designer to update the drawings and add/change UI elements and add those to the project in a non destructive manner.
+
+- Code that is generated should follow good naming conventions and avoid uninformative names, like label\_1 or textbox3 etc. This will require some sort of analysis or meta information solution.
 
 Tertiary goals
 ==============
 
--   Extend the image parser and transpilers to include application navigation flow.
+- Extend the image parser and transpilers to include application navigation flow.
 
--   Extend the image parser to consider meta information. Examples of meta information could be contextual names (e.g. user name, phone number, etc) or composite or custom UI elements.
+- Extend the image parser to consider meta information. Examples of meta information could be contextual names (e.g. user name, phone number, etc) or composite or custom UI elements.
 
--   Extend the transpiler to consider meta information such as API endpoints, namespaces and libraries.
+- Extend the tools to support user defined elements.
 
--   Recommend features and tools that can extend the tool chain.
+- Extend the transpiler to consider meta information such as API endpoints, namespaces and libraries.
 
--   Extend the image parser to work directly on the designers sketch, without the designer marking the UI elements.
+- Recommend features and tools that can extend the tool chain.
 
--   Set the tool chain up as a private tap for use with the OS X package manager homebrew.
+- Extend the image parser to work directly on the designers sketch, without the designer marking the UI elements.
+
+- Set the tool chain up as a private tap for use with the OS X package manager homebrew. 
 
 
 ### TODO: insert how-to-use instructions, etc
+
+# Tool usage
 
 Color codes and corresponding types
 ===============
@@ -72,3 +75,5 @@ Color codes and corresponding types
 | #008000 	| img    	| iOS-type 	| Java-type    	|
 
 Edit the imageParser/colorTypes.ini file to add your own colors and corresponding elements to be generated.
+
+**NB** There must be at least one white pixel between each element, unless the elements are nested.
