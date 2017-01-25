@@ -32,7 +32,9 @@ def parseImage(path, outputPath, platform, debug):
 
     CompleteRGBDict = PixelSearcher(height, width, image)
 
-    jsonPath = JSONObjects(CompleteRGBDict)
+    jsonPath = JSONObjects(CompleteRGBDict, outputPath)
+
+    return jsonPath
 
 def readConfigFile(config):
     options = config.options("color")
@@ -125,7 +127,7 @@ def getType(color, platform):
         print(Fore.RED + "Color is not known and ignored: " +  Style.RESET_ALL + color)
         return None
 
-def JSONObjects(CompleteRGBDict):
+def JSONObjects(CompleteRGBDict, outputPath):
 
     objects = []
     ListToSaveJSONObjects = []
@@ -153,14 +155,14 @@ def JSONObjects(CompleteRGBDict):
             third = secondValue[i][2]
             fourth = secondValue[i][3]
             elements = [first, second, third, fourth]
-            path = JSONMakerAndSaver(elements, hexValue, ListToSaveJSONObjects)
+            path = JSONMakerAndSaver(elements, hexValue, ListToSaveJSONObjects, outputPath)
 
     return path
 
 """
     Takes the different boxes, one at a time and creates a JSON objects. Then it saves it to a file
 """
-def JSONMakerAndSaver(elements, hexValue, ListToSaveJSONObjects):
+def JSONMakerAndSaver(elements, hexValue, ListToSaveJSONObjects, outputPath):
     data = {}
 
     data['content'] = "Color code: " + hexValue
