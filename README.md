@@ -71,3 +71,4 @@ Color codes and corresponding types
 | #ffff00 	| h1     	| iOS-type 	| Java-type    	|
 | #008000 	| img    	| iOS-type 	| Java-type    	|
 
+Edit the imageParser/colorTypes.ini file to add your own colors and corresponding elements to be generated.

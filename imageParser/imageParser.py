@@ -4,17 +4,16 @@ import argparse
 import json
 from PIL import Image, ImageFilter
 from colorama import Fore, Back, Style
+import configparser
 
 #Constants
+pathToConfig = "imageParser/colorTypes.ini"
 HTML = 0
 IOS = 1
 ANDROID = 2
 
 # Colors with the corresponding types
 colorTypes = {}
-colorTypes['#15aaff'] = ('div', 'iOsType', 'javaType') # blue
-colorTypes['#fb0007'] = ('p', 'iOsType', 'javaType') # red
-
 
 def parseImage(path, outputPath, platform, debug):
     image = Image.open(path)
@@ -22,12 +21,24 @@ def parseImage(path, outputPath, platform, debug):
     width, height = image.size
 
     if debug : print(Fore.GREEN + "Image loaded successfully" + Style.RESET_ALL)
+      
+    Config = configparser.RawConfigParser()
+    Config.read(pathToConfig)
+    print()
+    if debug : 
+        print(Fore.GREEN + "Config files loaded successfully" + Style.RESET_ALL)
+        
+    readConfigFile(Config)
 
     CompleteRGBDict = PixelSearcher(height, width, image)
 
     jsonPath = JSONObjects(CompleteRGBDict)
 
-    return jsonPath
+def readConfigFile(config):
+    options = config.options("color")
+    for option in options:
+        colorTypes["#" + option] = eval(config.get("color", option))
+
 
 # RGBA, not taking into account the a, yet which will be the transparent parameter
 """
@@ -88,7 +99,6 @@ def CheckIfCorner(RGBCornerPixels, x,y, image, number, RGB, zValue, isWhite):
     return isWhite
 
 #Testing at the moment
-
 def FindZValue(Zvalue, x, y, image, RGBCornerPixels, RGB, isWhite):
     r,g,b,a = image.getpixel((y-1, x))
 
@@ -136,6 +146,7 @@ def JSONObjects(CompleteRGBDict):
 
         hexValue = ConvertToHex(firstValue)
 
+
         for i in range(len(secondValue)):
             first = secondValue[i][0]
             second = secondValue[i][1]
@@ -149,19 +160,18 @@ def JSONObjects(CompleteRGBDict):
 """
     Takes the different boxes, one at a time and creates a JSON objects. Then it saves it to a file
 """
-
 def JSONMakerAndSaver(elements, hexValue, ListToSaveJSONObjects):
     data = {}
 
     data['content'] = "Color code: " + hexValue
     data['color'] = hexValue
+    data['type'] = getType(hexValue, 0)
     data['y'] = elements[0][0]
-    #print(item[0][0])
     data['x'] = elements[0][1]
-    #print(item[0][1])
     data['width'] = elements[1][1] - elements[0][1]
     data['height'] = elements[2][0] - elements[0][0]
     ListToSaveJSONObjects.append(data)
+    
     if not os.path.exists(outputPath):
         os.makedirs(outputPath)
         f = open(outputPath+"/imageRepresentation.json", "w+")
@@ -171,7 +181,6 @@ def JSONMakerAndSaver(elements, hexValue, ListToSaveJSONObjects):
         f = open(outputPath+"/imageRepresentation.json", "w+")
         json.dump(ListToSaveJSONObjects, f)
         f.close
-    #print(ListToSaveJSONObjects)
 
     return outputPath + "/imageRepresentation.json"
 
@@ -236,6 +245,8 @@ if __name__== "__main__":
 
     args = ap.parse_args()
 
+    pathToConfig = "colorTypes.ini"
+
     if not(args.inputImage.lower().endswith(".png")):
     	print(Fore.RED + "File should be an image file (png)." + Style.RESET_ALL)
     else:
@@ -249,6 +260,6 @@ if __name__== "__main__":
         elif args.android:
             platform = ANDROID
         parseImage(path, outputPath, platform, args.verbose)
+    print("Image parser: " + Fore.GREEN + "Done" + Style.RESET_ALL)
 
 
-print(Fore.GREEN + "Image parser: " + Style.RESET_ALL +"Done" )
