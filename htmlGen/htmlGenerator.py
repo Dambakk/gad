@@ -1,9 +1,9 @@
 import argparse
 import json
 import os.path
-from htmlGen import htmlUtils
+#from htmlGen import htmlUtils
+#import htmlUtils
 from colorama import Fore, Back, Style
-
 
 def parseJson(jsonPath, title, outputPath, debug):
 	if debug: print("Running json parser...")

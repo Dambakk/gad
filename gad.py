@@ -6,7 +6,8 @@ import os.path
 from PIL import Image
 
 from wrapper import wrapperUtils 
-from htmlGen import htmlGen
+#from htmlGen import htmlGenerator
+import htmlGen
 from imageParser import imageParser
 from colorama import Fore, Back, Style
 
@@ -26,6 +27,14 @@ if args.verbose:
 	elif (args.html): print("HTML is chosen")
 	elif (args.android): print("Android is chosen")
 
+platform = -1
+if args.html: 
+    platform = 0
+elif args.ios:
+    platform = 1
+elif args.android:
+    platform = 2
+
 #Check and prepare the file structure needed
 wrapperUtils.checkIfDirExists(args)
 
@@ -34,9 +43,9 @@ fullPath = os.path.abspath(args.inputImage)
 if args.verbose: print(Fore.YELLOW + "Full file path to image: "+ Style.RESET_ALL + fullPath)
 
 #Read the image and create a JSON structure
-pathToJson = imageParser.parseImage(fullPath, args.outputPath)
+pathToJson = imageParser.parseImage(fullPath, args.outputPath, platform, args.verbose)
 
 #Generate html according to the JSON 
-htmlGen.parseJson(pathToJson + "/testFil.json", args.projectName, args.outputPath +  "/" + args.projectName, args.verbose)
+htmlGenerator.parseJson(pathToJson, args.projectName, args.outputPath +  "/" + args.projectName, args.verbose)
 
-print(Fore.GREEN + "Done" + Style.RESET_ALL)
+print(Fore.GREEN + "All done" + Style.RESET_ALL)
