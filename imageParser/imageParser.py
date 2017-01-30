@@ -21,13 +21,13 @@ def parseImage(path, outputPath, platform, debug):
     width, height = image.size
 
     if debug : print(Fore.GREEN + "Image loaded successfully" + Style.RESET_ALL)
-      
+
     Config = configparser.RawConfigParser()
     Config.read(pathToConfig)
     print()
-    if debug : 
+    if debug :
         print(Fore.GREEN + "Config files loaded successfully" + Style.RESET_ALL)
-        
+
     readConfigFile(Config)
 
     CompleteRGBDict = PixelSearcher(height, width, image)
@@ -61,11 +61,8 @@ def PixelSearcher(height, width, image):
             if (r != 255 or g != 255 or b != 255):
                 if(x < height and y < width and x > 0 and y > 0):
                     RGB = r,g,b
-                    if(RGB != currentColor):
-                        zValue = FindZValue(zValue, x, y, image, RGBCornerPixels, RGB, isWhite)
-                        currentColor = RGB
-                    isWhite = CheckIfCorner(RGBCornerPixels, x, y, image, number, RGB, zValue, isWhite)
-
+                    CheckIfCorner(RGBCornerPixels, x, y, image, number, RGB, zValue, isWhite)
+    print(RGBCornerPixels)
     return RGBCornerPixels
 
 """
@@ -76,43 +73,36 @@ def CheckIfCorner(RGBCornerPixels, x,y, image, number, RGB, zValue, isWhite):
     value1,value2,value3 = RGB
     r,g,b,a = image.getpixel((y, x-1))
     c,d,e,f = image.getpixel((y-1, x))
-    if(r == 255 and g == 255 and b == 255 and c == 255 and d == 255 and e == 255):
+    RGB1 = r,g,b
+    RGB2 = c,d,e
+
+    if(RGB != RGB1 and RGB != RGB2):
         try:
-            RGBCornerPixels[value1,value2,value3].append([x,y, zValue])
+            RGBCornerPixels[value1,value2,value3].append([x,y])
         except KeyError:
-            RGBCornerPixels[value1,value2,value3] = [[x,y, zValue]]
+            RGBCornerPixels[value1,value2,value3] = [[x,y]]
 
     x1,x2,x3,x4 = image.getpixel((y+1, x))
     z1,z2,z3,z4 = image.getpixel((y, x-1))
-    if(x1 == 255 and x2 == 255 and x3 == 255 and z1 == 255 and z2 == 255 and z3 == 255):
-        RGBCornerPixels[value1,value2,value3].append([x,y, zValue])
+    RGB3 = x1,x2,x3
+    RGB4 = z1,z2,z3
+    if(RGB != RGB3 and RGB != RGB4):
+        RGBCornerPixels[value1,value2,value3].append([x,y])
         isWhite = True
 
     x5,x6,x7,x8 = image.getpixel((y, x+1))
     z5,z6,z7,z8 = image.getpixel((y-1, x))
-    if(x5 == 255 and x6 == 255 and x7 == 255 and z5 == 255 and z6 == 255 and z7 == 255):
-        RGBCornerPixels[value1,value2,value3].append([x,y, zValue])
+    RGB5 = x5,x6,x7
+    RGB6 = z5,z6,z7
+    if(RGB != RGB5 and RGB != RGB6):
+        RGBCornerPixels[value1,value2,value3].append([x,y])
 
     x9, x10, x11, x12 = image.getpixel((y+1, x))
     z9,z10,z11,z12 = image.getpixel((y, x+1))
-    if(x9 == 255 and x10 == 255 and x11 == 255 and z9 == 255 and z10 == 255 and z11 == 255):
-        RGBCornerPixels[value1,value2,value3].append([x,y, zValue])
-
-    return isWhite
-
-#Testing at the moment
-def FindZValue(Zvalue, x, y, image, RGBCornerPixels, RGB, isWhite):
-    r,g,b,a = image.getpixel((y-1, x))
-
-    if(r != 225 and g != 255 and b != 255):
-        Zvalue += 1
-    if(RGB in RGBCornerPixels and isWhite == True):
-        Zvalue -= 1
-    if(isWhite == True):
-        Zvalue = 0
-
-    return Zvalue
-
+    RGB7 = x9,x10,x11
+    RGB8 = z9,z10,z11
+    if(RGB != RGB7 and RGB != RGB8):
+        RGBCornerPixels[value1,value2,value3].append([x,y])
 
 
 def ConvertToHex(rgbColor):
@@ -131,6 +121,7 @@ def JSONObjects(CompleteRGBDict, outputPath):
 
     objects = []
     ListToSaveJSONObjects = []
+    listToFindZValues = []
 
     while(len(CompleteRGBDict) != 0):
         squaresList = []
@@ -139,7 +130,6 @@ def JSONObjects(CompleteRGBDict, outputPath):
         num2 = num[1]
         findTheSquares(num2, squaresList)
         objects.append([rgbColor, squaresList])
-
 
     while(len(objects) != 0):
         theFinalList = objects.pop(0)
@@ -154,26 +144,74 @@ def JSONObjects(CompleteRGBDict, outputPath):
             second = secondValue[i][1]
             third = secondValue[i][2]
             fourth = secondValue[i][3]
-            elements = [first, second, third, fourth]
-            path = JSONMakerAndSaver(elements, hexValue, ListToSaveJSONObjects, outputPath)
+            elements = [hexValue,first, second, third, fourth]
+            listToFindZValues.append(elements)
+            #print(elements)
+            #path = JSONMakerAndSaver(elements, hexValue, ListToSaveJSONObjects, outputPath)
+
+
+    listToFindZValues = findZValues(listToFindZValues)
+
+    for i in range(len(listToFindZValues)):
+        JSONMakerAndSaver(ListToSaveJSONObjects, listToFindZValues[i])
+
+    print(ListToSaveJSONObjects)
+    WriteToFile(ListToSaveJSONObjects, outputPath)
 
     return path
 
 """
+    Finds Z values on the elements found in the picture
+"""
+def findZValues(listToFindZValues):
+    print(len(listToFindZValues))
+
+    for i in range(len(listToFindZValues)):
+        zNumber = 0
+        for j in range(len(listToFindZValues)):
+            tempOject = listToFindZValues[i]
+            if(i != j):
+                checkObject = listToFindZValues[j]
+
+                tempOject1 = tempOject[1]
+                tempOject2 = tempOject[2]
+                tempOject3 = tempOject[3]
+                tempOject4 = tempOject[4]
+
+                checkObject1 = checkObject[1]
+                checkObject2 = checkObject[2]
+                checkObject3 = checkObject[3]
+                checkObject4 = checkObject[4]
+
+                #print(tempOject1)
+
+                if(tempOject1[1] >= checkObject1[1] and tempOject1[0] >= checkObject1[0] and tempOject2[1] <= checkObject2[1] and tempOject2[0] >= checkObject2[0] and tempOject3[1] >= checkObject3[1] and tempOject3[0] <= checkObject3[0] and tempOject4[1] <= checkObject4[1] and tempOject4[0] <= checkObject4[0]):
+                    zNumber += 1
+
+        tempOject.append(zNumber)
+
+    return listToFindZValues
+
+
+"""
     Takes the different boxes, one at a time and creates a JSON objects. Then it saves it to a file
 """
-def JSONMakerAndSaver(elements, hexValue, ListToSaveJSONObjects, outputPath):
+def JSONMakerAndSaver(ListToSaveJSONObjects, elements):
     data = {}
-
+    hexValue = elements[0]
     data['content'] = "Color code: " + hexValue
     data['color'] = hexValue
     data['type'] = getType(hexValue, 0)
-    data['y'] = elements[0][0]
-    data['x'] = elements[0][1]
-    data['width'] = elements[1][1] - elements[0][1]
-    data['height'] = elements[2][0] - elements[0][0]
+    data['y'] = elements[1][0]
+    data['x'] = elements[1][1]
+    data['width'] = elements[2][1] - elements[1][1]
+    data['height'] = elements[3][0] - elements[1][0]
+    data['zValue'] = elements[5]
     ListToSaveJSONObjects.append(data)
-    
+
+    return ListToSaveJSONObjects
+
+def WriteToFile(ListToSaveJSONObjects, outputPath):
     if not os.path.exists(outputPath):
         os.makedirs(outputPath)
         f = open(outputPath+"/imageRepresentation.json", "w+")
@@ -185,7 +223,6 @@ def JSONMakerAndSaver(elements, hexValue, ListToSaveJSONObjects, outputPath):
         f.close
 
     return outputPath + "/imageRepresentation.json"
-
 
 
 """
@@ -263,5 +300,3 @@ if __name__== "__main__":
             platform = ANDROID
         parseImage(path, outputPath, platform, args.verbose)
     print("Image parser: " + Fore.GREEN + "Done" + Style.RESET_ALL)
-
-
