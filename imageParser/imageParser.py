@@ -5,6 +5,7 @@ import json
 from PIL import Image, ImageFilter
 from colorama import Fore, Back, Style
 import configparser
+import collections
 
 #Constants
 pathToConfig = "imageParser/colorTypes.ini"
@@ -162,16 +163,22 @@ def JSONObjects(CompleteRGBDict, outputPath):
         idNumber += 1
 
 
-    print(listToFindZValues)
+    #print(listToFindZValues)
 
     listToFindZValues = findZValues(listToFindZValues)
 
-    print(listToFindZValues)
+    #print(listToFindZValues)
 
     for i in range(len(listToFindZValues)):
         JSONMakerAndSaver(ListToSaveJSONObjects, listToFindZValues[i])
 
-    print(ListToSaveJSONObjects)
+    #for i in ListToSaveJSONObjects:
+    #    print(i)
+
+    MakeCorrectNesting(ListToSaveJSONObjects)
+
+    #print(ListToSaveJSONObjects)
+
     WriteToFile(ListToSaveJSONObjects, outputPath)
 
     return path
@@ -180,7 +187,7 @@ def JSONObjects(CompleteRGBDict, outputPath):
     Finds Z values on the elements found in the picture
 """
 def findZValues(listToFindZValues):
-    print(len(listToFindZValues))
+    #print(len(listToFindZValues))
 
     for i in range(len(listToFindZValues)):
         zNumber = 0
@@ -207,8 +214,42 @@ def findZValues(listToFindZValues):
         #tempOject.append(zNumber)
         tempOject.append(parent)
 
-    print(listToFindZValues)
     return listToFindZValues
+
+
+def MakeCorrectNesting(ListToSaveJSONObjects):
+    newList = []
+    for i in ListToSaveJSONObjects:
+        if(i['PARENT'] == ''):
+            findChild(i, ListToSaveJSONObjects, newList)
+
+    #print("hehehe")
+    #print("hihihi")
+    #print("       ")
+
+    #for i in newList:
+#        print(i)
+#        print("     ")
+#        print("     ")
+
+
+def findChild(firstBox, ListToSaveJSONObjects, newList):
+
+    if(firstBox != []):
+        parent = firstBox['ID']
+        for i in ListToSaveJSONObjects:
+            if(firstBox != i and i['PARENT'] == parent):
+                firstBox['content'] = i
+                newList.append(firstBox)
+                findChild(i, ListToSaveJSONObjects, newList)
+
+        firstBox = []
+
+
+
+
+
+
 
 
 """
@@ -227,6 +268,7 @@ def JSONMakerAndSaver(ListToSaveJSONObjects, elements):
     data['ID'] = elements[5]
     data['PARENT'] = elements[6]
     ListToSaveJSONObjects.append(data)
+
 
     return ListToSaveJSONObjects
 
