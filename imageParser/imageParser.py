@@ -224,7 +224,8 @@ def JSONMakerAndSaver(ListToSaveJSONObjects, elements):
     data['x'] = elements[1][1]
     data['width'] = elements[2][1] - elements[1][1]
     data['height'] = elements[3][0] - elements[1][0]
-    data['zValue'] = elements[5]
+    data['ID'] = elements[5]
+    data['PARENT'] = elements[6]
     ListToSaveJSONObjects.append(data)
 
     return ListToSaveJSONObjects
