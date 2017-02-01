@@ -5,6 +5,7 @@ import json
 from PIL import Image, ImageFilter
 from colorama import Fore, Back, Style
 import configparser
+from collections import OrderedDict
 
 #Constants
 pathToConfig = "imageParser/colorTypes.ini"
@@ -121,11 +122,20 @@ def getType(color, platform):
         print(Fore.RED + "Color is not known and ignored: " +  Style.RESET_ALL + color)
         return None
 
+def listToOrderedList(L):
+    print("input list: ", L)
+    d = {}
+    ol = [OrderedDict((k, d[k](v)) for (k, v) in l.items()) for l in L]
+    print("Output list: ", ol)
+
+
 def JSONObjects(CompleteRGBDict, outputPath):
 
     objects = []
     ListToSaveJSONObjects = []
     listToFindZValues = []
+    completeList = []
+    completeListOrdered = OrderedDict()
 
     while(len(CompleteRGBDict) != 0):
         squaresList = []
@@ -162,19 +172,74 @@ def JSONObjects(CompleteRGBDict, outputPath):
         idNumber += 1
 
 
-    print(listToFindZValues)
+    #print(listToFindZValues)
 
     listToFindZValues = findZValues(listToFindZValues)
 
-    print(listToFindZValues)
+    #print(listToFindZValues)
 
     for i in range(len(listToFindZValues)):
-        JSONMakerAndSaver(ListToSaveJSONObjects, listToFindZValues[i])
+        JSONMakerAndSaver(ListToSaveJSONObjects, listToFindZValues[i], completeList, completeListOrdered)
 
+    print("COMPLETE LIST: ")
+    #print(ListToSaveJSONObjects)
+    for e in ListToSaveJSONObjects:
+        print(e)
+    #print(completeListOrdered)
+    print("ALL ITEMS:")
+    for l in completeListOrdered.items():
+        print(l)
     print(ListToSaveJSONObjects)
-    WriteToFile(ListToSaveJSONObjects, outputPath)
+
+    nestedList = fixNesting(completeListOrdered)
+    #WriteToFile(ListToSaveJSONObjects, outputPath, completeList)
+    WriteToFile(ListToSaveJSONObjects, outputPath, nestedList)
 
     return path
+
+
+def fixNesting(completeListOrdered):
+    print("")
+    print("Fixing nesting: ")
+    nestedList = OrderedDict()
+
+    #Connect those with parents
+    for e in completeListOrdered.items():
+        parent = e[1]["parent"]
+        print("Element: ", e)
+        print("parent: ", parent)
+        if parent is not -1:
+            #print("parent is ", parent, " and the complete list is ", completeListOrdered)
+            print("Parent element: ", completeListOrdered[str(parent)]['id'])
+            numOfEl = len(completeListOrdered[str(parent)]["content"])
+            print("Number of elements in content: ", numOfEl)
+            completeListOrdered[str(parent)]["content"][numOfEl] = e
+            print("parent updated: ", completeListOrdered[str(parent)])
+            #print("new nested element: ", completeListOrdered[parent])
+
+    #Remove those with parents from outer scope
+
+    #Done! Print result
+    for e in completeListOrdered.items():
+        parent = e[1]["parent"]
+        if parent is -1:
+            print("Is root element id: ", e[0])
+            nestedList[e[0]] = e
+            #del completeListOrdered[e[0]]
+    print("")
+    print("Restructuring done!")
+    print("Old structure:")
+    for e in completeListOrdered.items():
+        print(e)
+
+    print("")
+    print("New structure:")
+    for e in nestedList.items():
+        print(e)
+
+    return nestedList
+
+
 
 """
     Finds Z values on the elements found in the picture
@@ -207,15 +272,35 @@ def findZValues(listToFindZValues):
         #tempOject.append(zNumber)
         tempOject.append(parent)
 
-    print(listToFindZValues)
+    #print(listToFindZValues)
     return listToFindZValues
 
 
 """
     Takes the different boxes, one at a time and creates a JSON objects. Then it saves it to a file
 """
-def JSONMakerAndSaver(ListToSaveJSONObjects, elements):
+def JSONMakerAndSaver(ListToSaveJSONObjects, elements, completeList, completeListOrdered):
     data = {}
+    data2 = OrderedDict()
+    data2['id'] = int(elements[5])
+    try:
+        data2['parent'] = int(elements[6])
+    except:
+        data2['parent'] = -1     
+    data2['color'] = elements[0]
+    data2['x'] = elements[1][1]
+    data2['y'] = elements[1][0]
+    data2["width"] = elements[2][1] - elements[1][1]
+    data2["height"] = elements[3][0] - elements[1][0]
+    data2["content"] = OrderedDict()
+
+    #print("DATA: ", data2)
+    completeList.append(data2)
+    #if 
+    completeListOrdered[elements[5]] = data2
+    #print("COMPLETE list: ", completeList)
+    #print("Element: ", elements)
+    
     hexValue = elements[0]
     data['content'] = "Color code: " + hexValue
     data['color'] = hexValue
@@ -227,19 +312,28 @@ def JSONMakerAndSaver(ListToSaveJSONObjects, elements):
     data['ID'] = elements[5]
     data['PARENT'] = elements[6]
     ListToSaveJSONObjects.append(data)
-
+    
     return ListToSaveJSONObjects
 
-def WriteToFile(ListToSaveJSONObjects, outputPath):
+def WriteToFile(ListToSaveJSONObjects, outputPath, completeList):
+    print("Unordered list: ", ListToSaveJSONObjects)
+    #newList = listToOrderedList(ListToSaveJSONObjects)
+    #print("Ordered list: ", newList)
+    #data3 = OrderedDict(sorted(ListToSaveJSONObjects.items(), key=lambda t: ListToSaveJSONObjects[0]["ID"]))
+    #print(data3)
     if not os.path.exists(outputPath):
         os.makedirs(outputPath)
-        f = open(outputPath+"/imageRepresentation.json", "w+")
-        json.dump(ListToSaveJSONObjects, f)
-        f.close
-    else:
-        f = open(outputPath+"/imageRepresentation.json", "w+")
-        json.dump(ListToSaveJSONObjects, f)
-        f.close
+    f = open(outputPath+"/imageRepresentation.json", "w+")
+    #json.dump(ListToSaveJSONObjects, f, sort_keys=False)
+    #for (k,v) in completeList.items():
+    #    print(v)
+    #    json.dump(v.items(), f)
+#    json.dump(completeList.items(), f, sort_keys=True)
+    
+    json.dump(completeList, f)
+
+
+    f.close
 
     return outputPath + "/imageRepresentation.json"
 
