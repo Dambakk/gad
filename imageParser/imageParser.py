@@ -51,7 +51,7 @@ def PixelSearcher(height, width, image):
 
     RGBCornerPixels = {}
     number = 0
-
+    idValue = 0
     for x in range(0, height):
         zValue = 0
         currentColor = -1,-1,-1
@@ -61,7 +61,7 @@ def PixelSearcher(height, width, image):
             if (r != 255 or g != 255 or b != 255):
                 if(x < height and y < width and x > 0 and y > 0):
                     RGB = r,g,b
-                    CheckIfCorner(RGBCornerPixels, x, y, image, number, RGB, zValue, isWhite)
+                    CheckIfCorner(RGBCornerPixels, x, y, image, number, RGB, zValue, idValue)
     print(RGBCornerPixels)
     return RGBCornerPixels
 
@@ -69,7 +69,7 @@ def PixelSearcher(height, width, image):
 Funksjon som finner ut om vi har et hjørne, må oppdatteres for å takle nesting
 """
 
-def CheckIfCorner(RGBCornerPixels, x,y, image, number, RGB, zValue, isWhite):
+def CheckIfCorner(RGBCornerPixels, x,y, image, number, RGB, zValue, idValue):
     value1,value2,value3 = RGB
     r,g,b,a = image.getpixel((y, x-1))
     c,d,e,f = image.getpixel((y-1, x))
@@ -79,8 +79,10 @@ def CheckIfCorner(RGBCornerPixels, x,y, image, number, RGB, zValue, isWhite):
     if(RGB != RGB1 and RGB != RGB2):
         try:
             RGBCornerPixels[value1,value2,value3].append([x,y])
+            #RGBCornerPixels[value1,value2,value3].append(idValue)
         except KeyError:
             RGBCornerPixels[value1,value2,value3] = [[x,y]]
+            #RGBCornerPixels[value1,value2,value3].append(str(idValue))
 
     x1,x2,x3,x4 = image.getpixel((y+1, x))
     z1,z2,z3,z4 = image.getpixel((y, x-1))
@@ -88,7 +90,7 @@ def CheckIfCorner(RGBCornerPixels, x,y, image, number, RGB, zValue, isWhite):
     RGB4 = z1,z2,z3
     if(RGB != RGB3 and RGB != RGB4):
         RGBCornerPixels[value1,value2,value3].append([x,y])
-        isWhite = True
+        #RGBCornerPixels[value1,value2,value3].append(str(idValue))
 
     x5,x6,x7,x8 = image.getpixel((y, x+1))
     z5,z6,z7,z8 = image.getpixel((y-1, x))
@@ -96,6 +98,7 @@ def CheckIfCorner(RGBCornerPixels, x,y, image, number, RGB, zValue, isWhite):
     RGB6 = z5,z6,z7
     if(RGB != RGB5 and RGB != RGB6):
         RGBCornerPixels[value1,value2,value3].append([x,y])
+        #RGBCornerPixels[value1,value2,value3].append(str(idValue))
 
     x9, x10, x11, x12 = image.getpixel((y+1, x))
     z9,z10,z11,z12 = image.getpixel((y, x+1))
@@ -103,6 +106,7 @@ def CheckIfCorner(RGBCornerPixels, x,y, image, number, RGB, zValue, isWhite):
     RGB8 = z9,z10,z11
     if(RGB != RGB7 and RGB != RGB8):
         RGBCornerPixels[value1,value2,value3].append([x,y])
+        #RGBCornerPixels[value1,value2,value3].append(str(idValue))
 
 
 def ConvertToHex(rgbColor):
@@ -131,13 +135,13 @@ def JSONObjects(CompleteRGBDict, outputPath):
         findTheSquares(num2, squaresList)
         objects.append([rgbColor, squaresList])
 
+
     while(len(objects) != 0):
         theFinalList = objects.pop(0)
         firstValue = theFinalList.pop(0)
         secondValue = theFinalList[0]
 
         hexValue = ConvertToHex(firstValue)
-
 
         for i in range(len(secondValue)):
             first = secondValue[i][0]
@@ -149,8 +153,20 @@ def JSONObjects(CompleteRGBDict, outputPath):
             #print(elements)
             #path = JSONMakerAndSaver(elements, hexValue, ListToSaveJSONObjects, outputPath)
 
+    """
+        Append different ID to all elements
+    """
+    idNumber = 0
+    for x in listToFindZValues:
+        x.append(str(idNumber))
+        idNumber += 1
+
+
+    print(listToFindZValues)
 
     listToFindZValues = findZValues(listToFindZValues)
+
+    print(listToFindZValues)
 
     for i in range(len(listToFindZValues)):
         JSONMakerAndSaver(ListToSaveJSONObjects, listToFindZValues[i])
@@ -168,6 +184,7 @@ def findZValues(listToFindZValues):
 
     for i in range(len(listToFindZValues)):
         zNumber = 0
+        parent = ""
         for j in range(len(listToFindZValues)):
             tempOject = listToFindZValues[i]
             if(i != j):
@@ -183,13 +200,14 @@ def findZValues(listToFindZValues):
                 checkObject3 = checkObject[3]
                 checkObject4 = checkObject[4]
 
-                #print(tempOject1)
-
                 if(tempOject1[1] >= checkObject1[1] and tempOject1[0] >= checkObject1[0] and tempOject2[1] <= checkObject2[1] and tempOject2[0] >= checkObject2[0] and tempOject3[1] >= checkObject3[1] and tempOject3[0] <= checkObject3[0] and tempOject4[1] <= checkObject4[1] and tempOject4[0] <= checkObject4[0]):
-                    zNumber += 1
+                    #zNumber += 1
+                    parent = checkObject[5]
 
-        tempOject.append(zNumber)
+        #tempOject.append(zNumber)
+        tempOject.append(parent)
 
+    print(listToFindZValues)
     return listToFindZValues
 
 
