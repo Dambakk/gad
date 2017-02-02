@@ -4,27 +4,41 @@ import os.path
 #from htmlGen import htmlUtils
 #import htmlUtils
 from colorama import Fore, Back, Style
+from collections import OrderedDict
+from pprint import pprint
 
 def parseJson(jsonPath, title, outputPath, debug, externalRun=False):
 	if debug: print("Running json parser...")
 	
 	#Open JSON file and load content
 	with open(jsonPath) as data_file:
-
+		data = OrderedDict()
 		try:
-			data = json.load(data_file)
+			data = json.load(data_file, object_pairs_hook=OrderedDict)
 		except ValueError:
 			print(Fore.RED + "Something went wrong. Could not read JSON. Is the JSON structure correct?" + Style.RESET_ALL)
 			return
 		#Check if output folder exists, and if not, create a dir
 		if not os.path.exists(outputPath):
 			os.makedirs(outputPath)
-
+		
 		#Open/create the index html file
 		file = open(outputPath + "/index.html", "w")
 
 		if externalRun : from htmlGen import htmlUtils 
 		else : import htmlUtils
+
+		html = ""
+		for e in data.items():
+			html += readElement(e[1][1], file)
+			
+		print("DONE PARSING JSON")
+		print("Got this structure: ")
+		pprint(html)
+		file.write(html)
+
+		"""
+
 
 		#Prepare html file (add head, title, body, etc)
 		htmlUtils.prepareHTML(file, title)
@@ -45,9 +59,35 @@ def parseJson(jsonPath, title, outputPath, debug, externalRun=False):
 		#Add ending tags to html file
 		htmlUtils.endHTML(file)
 
+		"""
 		file.close();
 		print(Fore.GREEN + "HTML generator done" + Fore.RESET)
 
+"""
+	element is an ordered dict
+"""
+def readElement(element, file):
+	elementId = element['id']
+	color = element["color"]
+	posX = element["x"]
+	posY = element["y"]
+	width = element["width"]
+	height = element["height"]
+	contentStructure = element["content"]
+	print()
+	print("Element: ", elementId, color )
+
+	#htmlUtils.insertElement("div", "lorem", color, posX, posY, width, height, file)
+	content = "Lorem"
+	if len(contentStructure) > 0:
+		print("Found some content")
+		print(contentStructure['0'][1])
+		#Should might be another loop here to loop through the content instead of hard coding in '0'
+		content = readElement(contentStructure['0'][1], file)
+	
+	tekst = "<{0} style='background-color:{1}; margin-left:{2}px; margin-top:{3};' width='{4}' height='{5}'>{6}</{0}>\n".format("div", color, posX, posY, width, height, content)
+
+	return tekst
 
 if __name__== "__main__":
 
