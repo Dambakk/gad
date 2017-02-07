@@ -5,11 +5,9 @@ import json
 from PIL import Image, ImageFilter
 from colorama import Fore, Back, Style
 import configparser
-<<<<<<< HEAD
 import collections
-=======
 from collections import OrderedDict
->>>>>>> nestedJSON
+
 
 #Constants
 pathToConfig = "imageParser/colorTypes.ini"
@@ -39,7 +37,7 @@ def parseImage(path, outputPath, platform, debug):
 
 	if debug :
 		print("Done reading image")
-		
+
 	jsonPath = JSONObjects(CompleteRGBDict, outputPath, debug)
 
 	print("Image parser: " + Fore.GREEN + "Done" + Style.RESET_ALL)
@@ -167,23 +165,14 @@ def JSONObjects(CompleteRGBDict, outputPath, debug=False):
         idNumber += 1
 
 
-<<<<<<< HEAD
-    #print(listToFindZValues)
-=======
->>>>>>> nestedJSON
 
     unorderedList = findZValues(listToFindZValues)
-
-<<<<<<< HEAD
-    #print(listToFindZValues)
-=======
     completeListOrdered = createOrderedJSONStructure(unorderedList)
->>>>>>> nestedJSON
 
     nestedList = fixNesting(completeListOrdered)
-    
+
     pathToJSON = WriteToFile(outputPath, nestedList)
-    
+
     if debug :
         print("JSON structure created and saved to file on current location: \n"
     		+ pathToJSON)
@@ -213,7 +202,6 @@ def fixNesting(elementsOrdered):
 
     return nestedList
 
-<<<<<<< HEAD
     #for i in ListToSaveJSONObjects:
     #    print(i)
 
@@ -222,19 +210,14 @@ def fixNesting(elementsOrdered):
     #print(ListToSaveJSONObjects)
 
     WriteToFile(ListToSaveJSONObjects, outputPath)
-=======
->>>>>>> nestedJSON
+
 
 
 """
     Finds Z values on the elements found in the picture
 """
 def findZValues(listToFindZValues):
-<<<<<<< HEAD
-    #print(len(listToFindZValues))
 
-=======
->>>>>>> nestedJSON
     for i in range(len(listToFindZValues)):
         zNumber = 0
         parent = ""
@@ -267,14 +250,6 @@ def MakeCorrectNesting(ListToSaveJSONObjects):
         if(i['PARENT'] == ''):
             findChild(i, ListToSaveJSONObjects, newList)
 
-    #print("hehehe")
-    #print("hihihi")
-    #print("       ")
-
-    #for i in newList:
-#        print(i)
-#        print("     ")
-#        print("     ")
 
 
 def findChild(firstBox, ListToSaveJSONObjects, newList):
@@ -293,9 +268,6 @@ def findChild(firstBox, ListToSaveJSONObjects, newList):
 
 
 
-
-
-
 """
     Takes an unordered list and creates an ordered list and returns this new list
 """
@@ -307,7 +279,7 @@ def createOrderedJSONStructure(unorderedList):
 	    try:
 	        data2['parent'] = int(element[6]) # add parent if any
 	    except:
-	        data2['parent'] = -1 # if not any parent, element is root element and parent is -1    
+	        data2['parent'] = -1 # if not any parent, element is root element and parent is -1
 	    data2['color'] = element[0]
 	    data2['x'] = element[1][1]
 	    data2['y'] = element[1][0]
@@ -316,14 +288,14 @@ def createOrderedJSONStructure(unorderedList):
 	    data2["content"] = OrderedDict()
 
 	    completeListOrdered[element[5]] = data2
-	    
+
 	return completeListOrdered
 
 
 """
 	Write the ordered list to file in a JSON structure
-"""
-<<<<<<< HEAD
+
+
 def JSONMakerAndSaver(ListToSaveJSONObjects, elements):
     data = {}
     hexValue = elements[0]
@@ -340,15 +312,14 @@ def JSONMakerAndSaver(ListToSaveJSONObjects, elements):
 
 
     return ListToSaveJSONObjects
+"""
 
-def WriteToFile(ListToSaveJSONObjects, outputPath):
-=======
 def WriteToFile(outputPath, completeList):
->>>>>>> nestedJSON
+
     if not os.path.exists(outputPath):
         os.makedirs(outputPath)
     f = open(outputPath+"/imageRepresentation.json", "w+")
-   	
+
    	#evt remove overhead data in completeList here...
 
     json.dump(completeList, f)
@@ -430,4 +401,3 @@ if __name__== "__main__":
 		elif args.android:
 			platform = ANDROID
 		parseImage(path, outputPath, platform, args.verbose)
-	
