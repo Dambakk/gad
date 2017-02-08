@@ -9,7 +9,7 @@ from pprint import pprint
 
 def parseJson(jsonPath, title, outputPath, debug, externalRun=False):
 	if debug: print("Running json parser...")
-	
+
 	#Open JSON file and load content
 	with open(jsonPath) as data_file:
 		data = OrderedDict()
@@ -21,17 +21,17 @@ def parseJson(jsonPath, title, outputPath, debug, externalRun=False):
 		#Check if output folder exists, and if not, create a dir
 		if not os.path.exists(outputPath):
 			os.makedirs(outputPath)
-		
+
 		#Open/create the index html file
 		file = open(outputPath + "/index.html", "w")
 
-		if externalRun : from htmlGen import htmlUtils 
+		if externalRun : from htmlGen import htmlUtils
 		else : import htmlUtils
 
 		html = ""
 		for e in data.items():
 			html += readElement(e[1][1], file)
-			
+
 		print("DONE PARSING JSON")
 		print("Got this structure: ")
 		pprint(html)
@@ -75,7 +75,7 @@ def readElement(element, file):
 	height = element["height"]
 	contentStructure = element["content"]
 	print()
-	print("Element: ", elementId, color )
+	print("Element: ", elementId, color)
 
 	#htmlUtils.insertElement("div", "lorem", color, posX, posY, width, height, file)
 	content = "Lorem"
@@ -84,7 +84,7 @@ def readElement(element, file):
 		print(contentStructure['0'][1])
 		#Should might be another loop here to loop through the content instead of hard coding in '0'
 		content = readElement(contentStructure['0'][1], file)
-	
+
 	tekst = "<{0} style='background-color:{1}; margin-left:{2}px; margin-top:{3};' width='{4}' height='{5}'>{6}</{0}>\n".format("div", color, posX, posY, width, height, content)
 
 	return tekst
@@ -103,4 +103,3 @@ if __name__== "__main__":
 
 	#Start the parser
 	parseJson(args.JSONpath, args.title, args.outputPath, args.verbose)
-
