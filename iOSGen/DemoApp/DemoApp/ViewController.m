@@ -10,8 +10,8 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    self.label1.text = @"tittel";
-    self.button1.backgroundColor = [UIColor grayColor];
+    //self.label1.text = @"tittel";
+    //self.button1.backgroundColor = [UIColor grayColor];
 }
 
 - (void)didReceiveMemoryWarning {

@@ -16,8 +16,8 @@
 @property(nonatomic, strong) UIImageView *imageView1;
 
  */
- @property(nonatomic, strong) UILabel *label1;
-@property (nonatomic, strong) UIButton *button1;
+// @property(nonatomic, strong) UILabel *label1;
+//@property (nonatomic, strong) UIButton *button1;
 
 
 

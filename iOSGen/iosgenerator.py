@@ -9,37 +9,10 @@ from colorama import Fore, Back, Style
 from collections import OrderedDict
 import json
 
-"""
-@property(nonatomic, strong) UIView *view1;
-@property(nonatomic, strong) UIView *view2;
-@property(nonatomic, strong) UILabel *label1;
-@property(nonatomic, strong) UIImageView *imageView1;
-@property (nonatomic, strong) UIButton *button1;
-@property (nonatomic, assign) int myInt;
-
-
-self.view.backgroundColor = [UIColor colorWithRed:1 green:1 blue:1 alpha:1];
-
-//self.view.backgroundColor = [UIColor colorWithRed:0xea/255.0 green:0xea/255.0 blue:0xea/255.0 alpha:1];
-
-
-self.view2 = [[UIView alloc] initWithFrame:CGRectMake(50, 50, 100, 100)];
-self.view2.backgroundColor = [UIColor redColor];
-[self.view addSubview:self.view2];
-
-self.label1 = [[UILabel alloc] initWithFrame:CGRectMake(10, 10, 200, 20)];
-self.label1.text = @"Hello world!";
-[self.label1 sizeToFit];
-[self.view addSubview:self.label1];
-
-self.button1 = [[UIButton alloc] initWithFrame:CGRectMake(100, 200, 40, 40)];
-self.button1.backgroundColor = [UIColor yellowColor];
-[self.view addSubview:self.button1];
-
-"""
-
-listenM = {'#d41d01' : [["view"],["self.NAME = [[UIView alloc] initWithFrame:CGRectMake(posX, posY, width, height)];"], ["self.NAME.backgroundColor = [UIColor COLOR];"], ["[self.view addSubview:self.NAME];"]]}
-listenH = {'#d41d01' : [["view"], ["@property(nonatomic, strong) UIView *NAME;"]]}
+listenM = {'#d41d01' : [["view"],["self.NAME = [[UIView alloc] initWithFrame:CGRectMake(posX, posY, width, height)];"], ["self.NAME.backgroundColor = [UIColor COLOR];"]],
+'#9aaa01' : [["button"], ["self.NAME = [[UIButton alloc] initWithFrame:CGRectMake(posX, posY, width, height)];"], ["self.NAME.backgroundColor = [UIColor COLOR];"]]}
+listenMP = {"default" : ["[self.view addSubview:self.NAME];"],  '#d41d01' : ["[self.viewID addSubview:self.NAME];"], '#9aaa01' : ["[self.buttonID addSubview:self.NAME];"]}
+listenH = {'#d41d01' : [["view"], ["@property(nonatomic, strong) UIView *NAME;"]], '#9aaa01' : [["button"], ["@property (nonatomic, strong) UIButton *NAME;"]]}
 
 def copyProject(outputPath, args):
     if(args.ios):
@@ -49,6 +22,7 @@ def copyProject(outputPath, args):
 
         newListeM = []
         newListeH = []
+        newListeMP = []
         #TODO : Generate extractor code from JSON
 
         with open(args.jsonPath) as data_file:
@@ -60,14 +34,15 @@ def copyProject(outputPath, args):
         	    return
 
             for e in data.items():
-                readElement(e[1][1], newListeM, newListeH)
+                readElement(e[1][1], newListeM, newListeH, newListeMP)
 
         print(newListeM, " is newListeM")
         print(newListeH, " is newListeH")
+        print(newListeMP, " is newListeMP")
         print("        ")
 
-        replaceText(outputPath, "m", newListeM)
-        replaceText(outputPath, "h", newListeH)
+        replaceText(outputPath, "m", newListeM, newListeMP)
+        replaceText(outputPath, "h", newListeH, None)
 
         print("Done Dambikk")
 
@@ -112,15 +87,43 @@ def saveIOSobjectM(color, elementId, posX, posY, width, height, liste, newListeM
 
 def saveIOSobjectH(color, elementId, listenH, newListeH):
     if(color in listenH):
-
+        newitem = ""
         name = listenH[color][0][0] + str(elementId)
         a = listenH[color][1][0]
-
         b = str(a).replace("NAME", str(name))
-        newListeH.append(b)
+        newItem = b
+        newListeH.append(newItem)
+
+def saveIOSobjectMP(newListeMP, parentColor, elementId, parent, listenMP, color):
+    if(parent != -1):
+        if(color in listenMP):
+            name = listenM[color][0][0] + str(elementId)
+            item = listenMP[parentColor][0]
+            newitem = ""
+            if("ID" in item):
+                a = item
+                b = str(a).replace("ID", str(parent))
+                newItem = b
+            if("NAME" in item):
+                a = newItem
+                b = str(a).replace("NAME", str(name))
+                newItem = b
+            newListeMP.append(newItem)
+    else:
+        if(color in listenMP):
+            item = listenMP["default"][0]
+            name = listenM[color][0][0] + str(elementId)
+            newItem = ""
+            if("NAME" in item):
+                a = item
+                b = str(a).replace("NAME", str(name))
+                newItem = b
+            newListeMP.append(newItem)
 
 
-def readElement(element, newListeM, newListeH):
+
+
+def readElement(element, newListeM, newListeH, newListeMP):
     elementId = element['id']
     color = element["color"]
     posX = element["x"]
@@ -128,22 +131,25 @@ def readElement(element, newListeM, newListeH):
     width = element["width"]
     height = element["height"]
     parent = element["parent"]
+    parentColor = element['parentColor']
     contentStructure = element["content"]
     print(" ------- ")
-    print("Element: ", elementId, color, posX, posY, width, height, parent)
+    print("Element: ", elementId, color, posX, posY, width, height, parent, parentColor)
 
     saveIOSobjectM(color, elementId, posX, posY, width, height, listenM, newListeM)
     saveIOSobjectH(color, elementId,listenH, newListeH)
+    saveIOSobjectMP(newListeMP, parentColor, elementId, parent, listenMP, color)
 
     content = "Lorem"
     if len(contentStructure) > 0:
         #print("Found some content")
         #print(contentStructure['0'][1])
     		#Should might be another loop here to loop through the content instead of hard coding in '0'
-        content = readElement(contentStructure['0'][1], newListeM, newListeH)
+            # Must be!!!!!
+        content = readElement(contentStructure['0'][1], newListeM, newListeH, newListeMP)
 
 
-def replaceText(templatePath, fileType, elements):
+def replaceText(templatePath, fileType, elements, elements2):
     templatePath = templatePath+"/DemoApp"
     print(templatePath)
     file1 = open(templatePath + "/ViewControllerBase." + fileType , "r")
@@ -154,6 +160,9 @@ def replaceText(templatePath, fileType, elements):
         if(matchObj):
             for i in elements:
                 file2.write(i + "\n")
+            if(elements2 != None):
+                for j in elements2:
+                    file2.write(j + "\n")
         else:
             #print(line)
             file2.write(line)

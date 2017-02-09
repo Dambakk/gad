@@ -30,10 +30,10 @@
     [self.view addSubview:self.label1];
 
     */
-    
-    self.button1 = [[UIButton alloc] initWithFrame:CGRectMake(100, 200, 40, 40)];
-    self.button1.backgroundColor = [UIColor yellowColor];
-    [self.view addSubview:self.button1];
+
+//    self.button1 = [[UIButton alloc] initWithFrame:CGRectMake(100, 200, 40, 40)];
+//    self.button1.backgroundColor = [UIColor yellowColor];
+//    [self.view addSubview:self.button1];
 
 
 
