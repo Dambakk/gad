@@ -7,6 +7,8 @@ from colorama import Fore, Back, Style
 from collections import OrderedDict
 from pprint import pprint
 
+
+
 def parseJson(jsonPath, title, outputPath, debug, externalRun=False):
 	if debug: print("Running json parser...")
 	
@@ -23,50 +25,55 @@ def parseJson(jsonPath, title, outputPath, debug, externalRun=False):
 			os.makedirs(outputPath)
 		
 		#Open/create the index html file
-		file = open(outputPath + "/index.html", "w")
+		fileHTML = open(outputPath + "/index.html", "w")
+		fileCSS = open(outputPath + "/styles.css", "w")
+		fileTemplate = open("html_template.txt", "r")
+
+		template = fileTemplate.read()
+
+		template = template.replace('$cssLink',  "styles.css")
+
+		pprint(template)
 
 		if externalRun : from htmlGen import htmlUtils 
 		else : import htmlUtils
 
 		html = ""
-		for e in data.items():
-			html += readElement(e[1][1], file)
+		css = ""
+		counter = 0
+		for e in data.items(): # iterate root elements
+			someHTML, someCSS = readElement(e[1][1])
+			html += someHTML
+			css += someCSS
 			
 		print("DONE PARSING JSON")
 		print("Got this structure: ")
-		pprint(html)
-		file.write(html)
+		#pprint(html)
 
-		"""
+		pprint("")
+		pprint("And this css:")
+		#pprint(css)
 
+		template = template.replace("$content", html)
 
-		#Prepare html file (add head, title, body, etc)
-		htmlUtils.prepareHTML(file, title)
+		print("The new html:")
+		pprint(template)
 
-		#Loop through elements in JSON and create corresponding html elements
-		for element in data:
-			#If key is not found there will be an exception...
-			type = element["type"]
-			content = element["content"]
-			color = element["color"]
-			posX = element["x"]
-			posY = element["y"]
-			width = element["width"]
-			height = element["height"]
-			if debug: print(Fore.YELLOW + "Creating an element: " + Fore.WHITE + type + Fore.YELLOW + " - " + Fore.WHITE + content + Style.RESET_ALL)
-			htmlUtils.insertElement(type, content, color, posX, posY, width, height, file)
+		fileHTML.write(template)
+		fileCSS.write(css)
 
-		#Add ending tags to html file
-		htmlUtils.endHTML(file)
-
-		"""
-		file.close();
+		
+		fileHTML.close()
+		fileCSS.close()
 		print(Fore.GREEN + "HTML generator done" + Fore.RESET)
 
+
+cssClasses = {}
 """
 	element is an ordered dict
 """
-def readElement(element, file):
+def readElement(element):
+	counter += 1
 	elementId = element['id']
 	color = element["color"]
 	posX = element["x"]
@@ -75,19 +82,21 @@ def readElement(element, file):
 	height = element["height"]
 	contentStructure = element["content"]
 	print()
-	print("Element: ", elementId, color )
 
-	#htmlUtils.insertElement("div", "lorem", color, posX, posY, width, height, file)
-	content = "Lorem"
+	innerHTML = "Lorem"
+	innerCSS = ""
 	if len(contentStructure) > 0:
-		print("Found some content")
-		print(contentStructure['0'][1])
-		#Should might be another loop here to loop through the content instead of hard coding in '0'
-		content = readElement(contentStructure['0'][1], file)
+		innerHTML, innerCSS = readElement(contentStructure['0'][1])
 	
-	tekst = "<{0} style='background-color:{1}; margin-left:{2}px; margin-top:{3};' width='{4}' height='{5}'>{6}</{0}>\n".format("div", color, posX, posY, width, height, content)
+	tekst = "<{0} class='{0}-{1}' width='{2}' height='{3}'>{4}</{0}>\n".format("div", counter, width, height, innerHTML)
+	# check if css class entry already exists and if not, add it to the list.
+	css = ".{0}-{1} {2}\n \tbackground-color: {6}; \n\tmargin-left:{3}px; \n\tmargin-top:{4}px; \n{5}\n".format("div", counter, "{", posX, posY, "}", color) + innerCSS
+	try:
+		cssClasses["div",color].append([color, posX, posY])
+	except KeyError:
+		cssClasses["div",color] = [color, posX, posY]
 
-	return tekst
+	return tekst, css
 
 if __name__== "__main__":
 
