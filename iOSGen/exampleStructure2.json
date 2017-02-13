@@ -1,0 +1,96 @@
+{
+	"2":
+	[
+		"2",
+		{
+			"id": 2,
+			"parent": -1,
+			"color": "#d41d01",
+			"parentColor": "#ffffff",
+			"x": 64,
+			"y": 46,
+			"width": 132,
+			"height": 79,
+			"content":
+			{
+				"0":
+				[
+					"1",
+					{
+						"id": 1,
+						"parent": 2,
+						"parentColor": "#d41d01",
+						"color": "#9aaa01",
+						"x": 109,
+						"y": 73,
+						"width": 44,
+						"height": 20,
+						"content": {}
+					}
+				],
+				"1":
+				[
+					"5",
+					{
+						"id": 5,
+						"parent": 2,
+						"color": "#0228d4",
+						"parentColor": "#d41d01",
+						"x": 125,
+						"y": 80,
+						"width": 20,
+						"height": 8,
+						"content": {}
+					}
+				]
+			}
+		}
+	],
+	"3":
+	[
+		"3",
+	 	{
+		 	"id": 3,
+	 	 	"parent": -1,
+	 	  	"color": "#d41d01",
+			"parentColor": "#ffffff",
+	 	   	"x": 204,
+	 	   	"y": 57,
+	 	   	"width": 42,
+	 	   	"height": 54,
+	 	   	"content":
+	 	   	{
+		 	   	"0":
+		 	   	[
+		 	   		"0",
+		 	   		{
+		 	   			"id": 0,
+	 	   			 	"parent": 3,
+						"parentColor": "#d41d01",
+	 	   			  	"color": "#9aaa01",
+	 	   			   	"x": 211,
+	 	   			   	"y": 70,
+	 	   			   	"width": 28,
+	 	   			   	"height": 29,
+	 	   			   	"content": {}
+	 	   			}
+	 	   		],
+		 	   	"1":
+		 	   	[
+		 	   		"4",
+		 	   		{
+		 	   			"id": 4,
+		 	   			"parent": 3,
+		 	   			"color": "#d41d01",
+		 	   			"parentColor": "#d41d01",
+		 	   			"x": 220,
+		 	   			"y": 78,
+		 	   			"width": 13,
+		 	   			"height": 11,
+		 	   			"content": {}
+		 	   		}
+		 	   	]
+	 	   	}
+	 	}
+ 	]
+}
