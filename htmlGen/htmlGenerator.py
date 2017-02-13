@@ -7,7 +7,7 @@ from colorama import Fore, Back, Style
 from collections import OrderedDict
 from pprint import pprint
 
-
+cssClasses = []
 
 def parseJson(jsonPath, title, outputPath, debug, externalRun=False):
 	if debug: print("Running json parser...")
@@ -31,49 +31,58 @@ def parseJson(jsonPath, title, outputPath, debug, externalRun=False):
 
 		template = fileTemplate.read()
 
-		template = template.replace('$cssLink',  "styles.css")
-
-		pprint(template)
+		#pprint(template)
 
 		if externalRun : from htmlGen import htmlUtils 
 		else : import htmlUtils
 
 		html = ""
-		css = ""
-		counter = 0
 		for e in data.items(): # iterate root elements
-			someHTML, someCSS = readElement(e[1][1])
-			html += someHTML
-			css += someCSS
+			html += readElement(e[1][1])
 			
-		print("DONE PARSING JSON")
+		print("Done parsing JSON and generating html")
+		
+		"""
 		print("Got this structure: ")
 		#pprint(html)
 
 		pprint("")
 		pprint("And this css:")
-		#pprint(css)
-
-		template = template.replace("$content", html)
-
+		pprint(css)
 		print("The new html:")
 		pprint(template)
+		print("cssClasses:")
+		print(cssClasses)
+		"""
+
+		template = template.replace('$cssLink',  "styles.css")
+		template = template.replace("$title", title)
+		template = template.replace("$content", html)
+
+		css = generateCSS()
+
+		print("Done generating css")
 
 		fileHTML.write(template)
 		fileCSS.write(css)
 
+		print("Done writing to file")
 		
 		fileHTML.close()
 		fileCSS.close()
 		print(Fore.GREEN + "HTML generator done" + Fore.RESET)
 
 
-cssClasses = {}
+def generateCSS():
+	css = ""
+	for e in cssClasses:
+		css = css + ".{0}-{1}-{2} {{\n \tbackground-color: {3}; \n\tmargin-left:{1}px; \n\tmargin-top:{2}px; \n}}\n".format(e[0], e[2], e[3], e[1])
+	return css
+
 """
 	element is an ordered dict
 """
 def readElement(element):
-	counter += 1
 	elementId = element['id']
 	color = element["color"]
 	posX = element["x"]
@@ -81,22 +90,22 @@ def readElement(element):
 	width = element["width"]
 	height = element["height"]
 	contentStructure = element["content"]
-	print()
 
-	innerHTML = "Lorem"
-	innerCSS = ""
+	innerHTML = "Lorem" # must be here or else the html wont show anythong...
 	if len(contentStructure) > 0:
-		innerHTML, innerCSS = readElement(contentStructure['0'][1])
+		for i in range(0, len(contentStructure)):
+			innerHTML += readElement(contentStructure[str(i)][1]) # REDO real loop
+			
 	
-	tekst = "<{0} class='{0}-{1}' width='{2}' height='{3}'>{4}</{0}>\n".format("div", counter, width, height, innerHTML)
-	# check if css class entry already exists and if not, add it to the list.
-	css = ".{0}-{1} {2}\n \tbackground-color: {6}; \n\tmargin-left:{3}px; \n\tmargin-top:{4}px; \n{5}\n".format("div", counter, "{", posX, posY, "}", color) + innerCSS
-	try:
-		cssClasses["div",color].append([color, posX, posY])
-	except KeyError:
-		cssClasses["div",color] = [color, posX, posY]
+	# NEED TO GO FROM COLOR TO TAG HERE!
 
-	return tekst, css
+	tekst = "<{0} class='{0}-{5}-{6}' width='{2}' height='{3}'>{4}</{0}>\n".format("div", color, width, height, innerHTML, posX, posY)
+	# check if css class entry already exists and if not, add it to the list.
+	
+	if not ("div", color, posX, posY) in cssClasses:
+		cssClasses.append(("div", color, posX, posY))
+
+	return tekst
 
 if __name__== "__main__":
 
