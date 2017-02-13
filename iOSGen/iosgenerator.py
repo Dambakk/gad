@@ -8,22 +8,51 @@ import fileinput
 from colorama import Fore, Back, Style
 from collections import OrderedDict
 import json
+import configparser
 
-listenM = {'#d41d01' : [["view"],["self.NAME = [[UIView alloc] initWithFrame:CGRectMake(posX, posY, width, height)];"], ["self.NAME.backgroundColor = [UIColor COLOR];"]],
-'#9aaa01' : [["button"], ["self.NAME = [[UIButton alloc] initWithFrame:CGRectMake(posX, posY, width, height)];"], ["self.NAME.backgroundColor = [UIColor COLOR];"]]}
-listenMP = {"default" : ["[self.view addSubview:self.NAME];"],  '#d41d01' : ["[self.viewID addSubview:self.NAME];"], '#9aaa01' : ["[self.buttonID addSubview:self.NAME];"]}
-listenH = {'#d41d01' : [["view"], ["@property(nonatomic, strong) UIView *NAME;"]], '#9aaa01' : [["button"], ["@property (nonatomic, strong) UIButton *NAME;"]]}
+"""
+listenM = {
+'#d41d01' : [["view"],["self.NAME = [[UIView alloc] initWithFrame:CGRectMake(posX, posY, width, height)];"], ["self.NAME.backgroundColor = [UIColor COLOR];"]],
+'#9aaa01' : [["button"], ["self.NAME = [[UIButton alloc] initWithFrame:CGRectMake(posX, posY, width, height)];"], ["self.NAME.backgroundColor = [UIColor COLOR];"]],
+'#0228d4' : [["dambakk"], ["self.NAME = [[UIDambakk alloc] initWithFrame:CGRectMake(posX, posY, width, height)];"], ["self.NAME.backgroundColor = [UIColor COLOR];"]]
+}
+
+{
+'#0228d4': [['dambakk'], ['self.NAME = [[UIDambakk alloc] initWithFrame:CGRectMake(posX, posY, width, height)];'], ['self.NAME.backgroundColor = [UIColor COLOR];']], 
+'#9aaa01': [['button'], ['self.NAME = [[UIButton alloc] initWithFrame:CGRectMake(posX, posY, width, height)];'], ['self.NAME.backgroundColor = [UIColor COLOR];']], 
+'#d41d01': [['view'], ['self.NAME = [[UIView alloc] initWithFrame:CGRectMake(posX, posY, width, height)];'], ['self.NAME.backgroundColor = [UIColor COLOR];']]
+} 
+
+listenMP = {
+"default" : ["[self.view addSubview:self.NAME];"],  
+'#d41d01' : ["[self.viewID addSubview:self.NAME];"], 
+'#9aaa01' : ["[self.buttonID addSubview:self.NAME];"],
+'#0228d4' : ["[self.dambakkID addSubview:self.NAME;"]
+}
+
+listenH = {
+'#d41d01' : [["view"], ["@property (nonatomic, strong) UIView *NAME;"]], 
+'#9aaa01' : [["button"], ["@property (nonatomic, strong) UIButton *NAME;"]],
+'#0228d4' : [["Dambakk"], ["@property (nonatomic, superstrong) UIDambakk *NAME;"]]
+}
+"""
+
+listenM = {}
+listenMP = {}
+listenH = {}
 
 def copyProject(outputPath, args):
     if(args.ios):
         fromDirectory = "DemoApp"
         toDirectory = outputPath
+        print("Output path: ", outputPath)
         copy_tree(fromDirectory, toDirectory)
+
+        configSetup()
 
         newListeM = []
         newListeH = []
         newListeMP = []
-        #TODO : Generate extractor code from JSON
 
         with open(args.jsonPath) as data_file:
             data = OrderedDict()
@@ -35,53 +64,61 @@ def copyProject(outputPath, args):
 
             for e in data.items():
                 readElement(e[1][1], newListeM, newListeH, newListeMP)
-
-        print(newListeM, " is newListeM")
-        print(newListeH, " is newListeH")
-        print(newListeMP, " is newListeMP")
-        print("        ")
+        print()
+        print("Done reading elements")
 
         replaceText(outputPath, "m", newListeM, newListeMP)
         replaceText(outputPath, "h", newListeH, None)
 
-        print("Done Dambikk")
+        print("Done Dambikk") # haha
 
+def configSetup():
+    Config = configparser.RawConfigParser()
+    Config.read("colorTypes.ini")
+    readConfigFile(Config)
+
+def readConfigFile(config):
+    options1 = config.options("listenM")
+    for option in options1:
+        listenM["#" + option] = eval(config.get("listenM", option))
+
+    options2 = config.options("listenMP")
+    for option in options2:
+        if str(option) == 'default':
+            listenMP[option] = eval(config.get("listenMP", option))
+        else:
+            listenMP["#" + option] = eval(config.get("listenMP", option))
+    options3 = config.options("listenH")
+    for option in options3:
+        listenH["#" + option] = eval(config.get("listenH", option))
+
+def hex_to_rgb(value):
+    """Return (red, green, blue) for the color given as #rrggbb."""
+    value = value.lstrip('#')
+    lv = len(value)
+    return tuple(int(value[i:i + lv // 3], 16) for i in range(0, lv, lv // 3))
 
 def saveIOSobjectM(color, elementId, posX, posY, width, height, liste, newListeM):
-    print(color, elementId, posX, posY, width, height, "  hahahadsfasdfasdfs")
-
     if(color in liste):
         name = liste[color][0][0] + str(elementId)
         newItem = ""
         for i in range(1, len(liste[color])):
             item = liste[color][i]
-
             if ("NAME" in item[0]):
-                a = item[0]
-                b = str(a).replace("NAME", str(name))
-                newItem = b
+                newItem = str(item[0]).replace("NAME", str(name))
             if ("posX" in item[0]):
-                a = newItem
-                b = str(a).replace("posX", str(posX))
-                newItem = b
+                newItem = str(newItem).replace("posX", str(posX))
             if ("posY" in item[0]):
-                a = newItem
-                b = str(a).replace("posY", str(posY))
-                newItem = b
+                newItem = str(newItem).replace("posY", str(posY))
             if ("width" in item[0]):
-                a = newItem
-                b = str(a).replace("width", str(width))
-                newItem = b
+                newItem = str(newItem).replace("width", str(width))
             if ("height" in item[0]):
-                a = newItem
-                b = str(a).replace("height", str(height))
-                newItem = b
+                newItem = str(newItem).replace("height", str(height))
             if ("COLOR" in item[0]):
-                a = newItem
-                b = str(a).replace("COLOR", "redColor")
-                newItem = b
+                (r,g,b) = hex_to_rgb(color)
+                rgbColor = "colorWithRed:{0} green:{1} blue:{2} alpha:1".format(r,g,b)
+                newItem = str(newItem).replace("COLOR", rgbColor) 
             newListeM.append(newItem)
-
     else:
         print("Not a valid color")
 
@@ -90,8 +127,7 @@ def saveIOSobjectH(color, elementId, listenH, newListeH):
         newitem = ""
         name = listenH[color][0][0] + str(elementId)
         a = listenH[color][1][0]
-        b = str(a).replace("NAME", str(name))
-        newItem = b
+        newItem = str(a).replace("NAME", str(name))
         newListeH.append(newItem)
 
 def saveIOSobjectMP(newListeMP, parentColor, elementId, parent, listenMP, color):
@@ -99,25 +135,19 @@ def saveIOSobjectMP(newListeMP, parentColor, elementId, parent, listenMP, color)
         if(color in listenMP):
             name = listenM[color][0][0] + str(elementId)
             item = listenMP[parentColor][0]
-            newitem = ""
-            if("ID" in item):
-                a = item
-                b = str(a).replace("ID", str(parent))
-                newItem = b
-            if("NAME" in item):
-                a = newItem
-                b = str(a).replace("NAME", str(name))
-                newItem = b
+            newItem = ""
+            if("ID" in item[0]):
+                newItem = str(item[0]).replace("ID", str(parent))
+            if("NAME" in item[0]):
+                newItem = str(newItem).replace("NAME", str(name))
             newListeMP.append(newItem)
     else:
         if(color in listenMP):
-            item = listenMP["default"][0]
+            item = listenMP['default'][0]
             name = listenM[color][0][0] + str(elementId)
             newItem = ""
-            if("NAME" in item):
-                a = item
-                b = str(a).replace("NAME", str(name))
-                newItem = b
+            if("NAME" in item[0]):
+                newItem = str(item[0]).replace("NAME", str(name))
             newListeMP.append(newItem)
 
 
@@ -133,8 +163,6 @@ def readElement(element, newListeM, newListeH, newListeMP):
     parent = element["parent"]
     parentColor = element['parentColor']
     contentStructure = element["content"]
-    print(" ------- ")
-    print("Element: ", elementId, color, posX, posY, width, height, parent, parentColor)
 
     saveIOSobjectM(color, elementId, posX, posY, width, height, listenM, newListeM)
     saveIOSobjectH(color, elementId,listenH, newListeH)
@@ -142,29 +170,27 @@ def readElement(element, newListeM, newListeH, newListeMP):
 
     content = "Lorem"
     if len(contentStructure) > 0:
-        #print("Found some content")
-        #print(contentStructure['0'][1])
-    		#Should might be another loop here to loop through the content instead of hard coding in '0'
-            # Must be!!!!!
-        content = readElement(contentStructure['0'][1], newListeM, newListeH, newListeMP)
-
+        for i in range (0, len(contentStructure)):
+            content = readElement(contentStructure[str(i)][1], newListeM, newListeH, newListeMP)
+      
 
 def replaceText(templatePath, fileType, elements, elements2):
     templatePath = templatePath+"/DemoApp"
-    print(templatePath)
     file1 = open(templatePath + "/ViewControllerBase." + fileType , "r")
     file2 = open(templatePath + "/NewFile.txt", "w")
 
     for line in file1:
         matchObj = re.match('\{\{\[\]\}\}', line)
         if(matchObj):
+            file2.write("/* Declearing elements */\n")
             for i in elements:
                 file2.write(i + "\n")
             if(elements2 != None):
+                file2.write("\n")
+                file2.write("/* Adding elements */\n")
                 for j in elements2:
                     file2.write(j + "\n")
         else:
-            #print(line)
             file2.write(line)
     file1.close()
     file2.close()
@@ -184,15 +210,12 @@ def replaceText(templatePath, fileType, elements, elements2):
 if __name__== "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("jsonPath", help="Path to JSON structure")
-    #ap.add_argument("title", help="The title of the web page")
     ap.add_argument("outputPath", help="Output directory")
-    #ap.add_argument("jsonPath", help="Path to JSON structure")
-    #ap.add_argument("test", help="hihi")
     platform = ap.add_mutually_exclusive_group(required=True)
     platform.add_argument("--ios", help="Create a iOs project", action="store_true")
     platform.add_argument("--html", help="Create a html web page", action="store_true")
     platform.add_argument("--android", help="Create an android project", action="store_true")
     ap.add_argument("-v", "--verbose", help="Verbose output", action="store_true", default=False)
     args = ap.parse_args()
-    #Start the parser
+    
     copyProject(args.outputPath, args)
