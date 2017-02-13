@@ -116,7 +116,7 @@ def saveIOSobjectM(color, elementId, posX, posY, width, height, liste, newListeM
                 newItem = str(newItem).replace("height", str(height))
             if ("COLOR" in item[0]):
                 (r,g,b) = hex_to_rgb(color)
-                rgbColor = "colorWithRed:{0} green:{1} blue:{2} alpha:1".format(r/255.0,g/255.0,b/255.0)
+                rgbColor = "colorWithRed:{0}/255.0 green:{1}/255.0 blue:{2}/255.0 alpha:1".format(r,g,b)
                 newItem = str(newItem).replace("COLOR", rgbColor) 
             newListeM.append(newItem)
     else:
