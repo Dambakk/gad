@@ -55,7 +55,6 @@ def readConfigFile(config):
 """
     Function that searchs through the different pixels - returning the elements
 """
-
 def PixelSearcher(height, width, image):
 
     RGBCornerPixels = {}
@@ -110,7 +109,6 @@ def CheckIfCorner(RGBCornerPixels, x,y, image, number, RGB, zValue, idValue):
     if(RGB != RGB7 and RGB != RGB8):
         RGBCornerPixels[value1,value2,value3].append([x,y])
 
-
 def ConvertToHex(rgbColor):
     hexValue = '#%02x%02x%02x' % (rgbColor[0], rgbColor[1], rgbColor[2])
     return hexValue
@@ -140,7 +138,6 @@ def JSONObjects(CompleteRGBDict, outputPath, debug=False):
         findTheSquares(num2, squaresList)
         objects.append([rgbColor, squaresList])
 
-
     while(len(objects) != 0):
         theFinalList = objects.pop(0)
         firstValue = theFinalList.pop(0)
@@ -164,8 +161,6 @@ def JSONObjects(CompleteRGBDict, outputPath, debug=False):
         x.append(str(idNumber))
         idNumber += 1
 
-
-
     unorderedList = findZValues(listToFindZValues)
     completeListOrdered = createOrderedJSONStructure(unorderedList)
 
@@ -178,7 +173,6 @@ def JSONObjects(CompleteRGBDict, outputPath, debug=False):
     		+ pathToJSON)
 
     return pathToJSON
-
 
 """
 	Go throug list and move childs to content of parent and return
@@ -201,16 +195,6 @@ def fixNesting(elementsOrdered):
             nestedList[e[0]] = e
 
     return nestedList
-
-    #for i in ListToSaveJSONObjects:
-    #    print(i)
-
-    MakeCorrectNesting(ListToSaveJSONObjects)
-
-    #print(ListToSaveJSONObjects)
-
-    WriteToFile(ListToSaveJSONObjects, outputPath)
-
 
 
 """
@@ -244,30 +228,6 @@ def findZValues(listToFindZValues):
     return listToFindZValues
 
 
-def MakeCorrectNesting(ListToSaveJSONObjects):
-    newList = []
-    for i in ListToSaveJSONObjects:
-        if(i['PARENT'] == ''):
-            findChild(i, ListToSaveJSONObjects, newList)
-
-
-
-def findChild(firstBox, ListToSaveJSONObjects, newList):
-
-    if(firstBox != []):
-        parent = firstBox['ID']
-        for i in ListToSaveJSONObjects:
-            if(firstBox != i and i['PARENT'] == parent):
-                firstBox['content'] = i
-                newList.append(firstBox)
-                findChild(i, ListToSaveJSONObjects, newList)
-
-        firstBox = []
-
-
-
-
-
 """
     Takes an unordered list and creates an ordered list and returns this new list
 """
@@ -294,33 +254,12 @@ def createOrderedJSONStructure(unorderedList):
 
 """
 	Write the ordered list to file in a JSON structure
-
-
-def JSONMakerAndSaver(ListToSaveJSONObjects, elements):
-    data = {}
-    hexValue = elements[0]
-    data['content'] = "Color code: " + hexValue
-    data['color'] = hexValue
-    data['type'] = getType(hexValue, 0)
-    data['y'] = elements[1][0]
-    data['x'] = elements[1][1]
-    data['width'] = elements[2][1] - elements[1][1]
-    data['height'] = elements[3][0] - elements[1][0]
-    data['ID'] = elements[5]
-    data['PARENT'] = elements[6]
-    ListToSaveJSONObjects.append(data)
-
-
-    return ListToSaveJSONObjects
 """
-
 def WriteToFile(outputPath, completeList):
 
     if not os.path.exists(outputPath):
         os.makedirs(outputPath)
     f = open(outputPath+"/imageRepresentation.json", "w+")
-
-   	#evt remove overhead data in completeList here...
 
     json.dump(completeList, f)
     f.close()

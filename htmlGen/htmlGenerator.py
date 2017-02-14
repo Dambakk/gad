@@ -1,8 +1,6 @@
 import argparse
 import json
 import os.path
-#from htmlGen import htmlUtils
-#import htmlUtils
 from colorama import Fore, Back, Style
 from collections import OrderedDict
 from pprint import pprint
@@ -11,7 +9,7 @@ cssClasses = []
 
 def parseJson(jsonPath, title, outputPath, debug, externalRun=False):
 	if debug: print("Running json parser...")
-	
+
 	#Open JSON file and load content
 	with open(jsonPath) as data_file:
 		data = OrderedDict()
@@ -23,7 +21,7 @@ def parseJson(jsonPath, title, outputPath, debug, externalRun=False):
 		#Check if output folder exists, and if not, create a dir
 		if not os.path.exists(outputPath):
 			os.makedirs(outputPath)
-		
+
 		#Open/create the index html file
 		fileHTML = open(outputPath + "/index.html", "w")
 		fileCSS = open(outputPath + "/styles.css", "w")
@@ -33,7 +31,7 @@ def parseJson(jsonPath, title, outputPath, debug, externalRun=False):
 
 		#pprint(template)
 
-		if externalRun : from htmlGen import htmlUtils 
+		if externalRun : from htmlGen import htmlUtils
 		else : import htmlUtils
 
 		html = ""
@@ -41,19 +39,6 @@ def parseJson(jsonPath, title, outputPath, debug, externalRun=False):
 			html += readElement(e[1][1])
 			
 		print("Done parsing JSON and generating html")
-		
-		"""
-		print("Got this structure: ")
-		#pprint(html)
-
-		pprint("")
-		pprint("And this css:")
-		pprint(css)
-		print("The new html:")
-		pprint(template)
-		print("cssClasses:")
-		print(cssClasses)
-		"""
 
 		template = template.replace('$cssLink',  "styles.css")
 		template = template.replace("$title", title)
@@ -104,7 +89,7 @@ def readElement(element):
 	
 	if not ("div", color, posX, posY) in cssClasses:
 		cssClasses.append(("div", color, posX, posY))
-
+    
 	return tekst
 
 if __name__== "__main__":
@@ -121,4 +106,3 @@ if __name__== "__main__":
 
 	#Start the parser
 	parseJson(args.JSONpath, args.title, args.outputPath, args.verbose)
-
