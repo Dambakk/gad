@@ -4,11 +4,19 @@ import os.path
 from colorama import Fore, Back, Style
 from collections import OrderedDict
 from pprint import pprint
+import configparser
 
 cssClasses = []
+colorTypes = {}
 
 def parseJson(jsonPath, title, outputPath, debug, externalRun=False):
 	if debug: print("Running json parser...")
+
+	Config = configparser.RawConfigParser()
+	Config.read("colorTypes.ini")
+	readConfigFile(Config)
+
+	if debug: print("Config file read")
 
 	#Open JSON file and load content
 	with open(jsonPath) as data_file:
@@ -38,7 +46,7 @@ def parseJson(jsonPath, title, outputPath, debug, externalRun=False):
 		for e in data.items(): # iterate root elements
 			html += readElement(e[1][1])
 			
-		print("Done parsing JSON and generating html")
+		if debug: print("Done parsing JSON and generating html")
 
 		template = template.replace('$cssLink',  "styles.css")
 		template = template.replace("$title", title)
@@ -46,16 +54,22 @@ def parseJson(jsonPath, title, outputPath, debug, externalRun=False):
 
 		css = generateCSS()
 
-		print("Done generating css")
+		if debug: print("Done generating css")
 
 		fileHTML.write(template)
 		fileCSS.write(css)
 
-		print("Done writing to file")
+		if debug: print("Done writing to file")
 		
 		fileHTML.close()
 		fileCSS.close()
 		print(Fore.GREEN + "HTML generator done" + Fore.RESET)
+
+
+def readConfigFile(config):
+	options = config.options("color")
+	for option in options:
+		colorTypes["#" + option] = config.get("color", option)
 
 
 def generateCSS():
@@ -80,15 +94,14 @@ def readElement(element):
 	if len(contentStructure) > 0:
 		for i in range(0, len(contentStructure)):
 			innerHTML += readElement(contentStructure[str(i)][1]) # REDO real loop
-			
-	
-	# NEED TO GO FROM COLOR TO TAG HERE!
+				
+	tag = colorTypes[color]
 
-	tekst = "<{0} class='{0}-{5}-{6}' width='{2}' height='{3}'>{4}</{0}>\n".format("div", color, width, height, innerHTML, posX, posY)
+	tekst = "<{0} class='{0}-{5}-{6}' width='{2}' height='{3}'>{4}</{0}>\n".format(tag, color, width, height, innerHTML, posX, posY)
 	# check if css class entry already exists and if not, add it to the list.
 	
-	if not ("div", color, posX, posY) in cssClasses:
-		cssClasses.append(("div", color, posX, posY))
+	if not (tag, color, posX, posY) in cssClasses:
+		cssClasses.append((tag, color, posX, posY))
     
 	return tekst
 

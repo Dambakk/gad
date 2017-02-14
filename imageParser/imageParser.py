@@ -27,11 +27,11 @@ def parseImage(path, outputPath, platform, debug):
 
     Config = configparser.RawConfigParser()
     Config.read(pathToConfig)
+    readConfigFile(Config)
 
     if debug :
        print(Fore.GREEN + "Config files loaded successfully" + Style.RESET_ALL)
 
-    readConfigFile(Config)
 
     CompleteRGBDict = PixelSearcher(height, width, image)
 
