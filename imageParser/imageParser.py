@@ -186,6 +186,7 @@ def fixNesting(elementsOrdered):
         parent = e[1]["parent"]
         if parent is not -1: #if not root element, move ref to content of parent
             size = len(elementsOrdered[str(parent)]["content"])
+            e[1]['parentColor'] = elementsOrdered[str(parent)]["color"]
             elementsOrdered[str(parent)]["content"][size] = e
 
     #Move root elemets with nested elements to own list
@@ -228,28 +229,30 @@ def findZValues(listToFindZValues):
     return listToFindZValues
 
 
+
 """
     Takes an unordered list and creates an ordered list and returns this new list
 """
 def createOrderedJSONStructure(unorderedList):
-	completeListOrdered = OrderedDict()
-	for element in unorderedList:
-	    data2 = OrderedDict()
-	    data2['id'] = int(element[5])
-	    try:
-	        data2['parent'] = int(element[6]) # add parent if any
-	    except:
-	        data2['parent'] = -1 # if not any parent, element is root element and parent is -1
-	    data2['color'] = element[0]
-	    data2['x'] = element[1][1]
-	    data2['y'] = element[1][0]
-	    data2["width"] = element[2][1] - element[1][1]
-	    data2["height"] = element[3][0] - element[1][0]
-	    data2["content"] = OrderedDict()
+    completeListOrdered = OrderedDict()
+    for element in unorderedList:
+        data2 = OrderedDict()
+        data2['id'] = int(element[5])
+        try:
+            data2['parent'] = int(element[6]) # add parent if any
+        except:
+            data2['parent'] = -1 # if not any parent, element is root element and parent is -1
+        data2['parentColor'] = ""
+        data2['color'] = element[0]
+        data2['x'] = element[1][1]
+        data2['y'] = element[1][0]
+        data2["width"] = element[2][1] - element[1][1]
+        data2["height"] = element[3][0] - element[1][0]
+        data2["content"] = OrderedDict()
 
-	    completeListOrdered[element[5]] = data2
+        completeListOrdered[element[5]] = data2
 
-	return completeListOrdered
+    return completeListOrdered
 
 
 """
