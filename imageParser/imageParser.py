@@ -19,30 +19,42 @@ ANDROID = 2
 colorTypes = {}
 
 def parseImage(path, outputPath, platform, debug):
-	image = Image.open(path)
-	pixels = image.load()
-	width, height = image.size
+    image = Image.open(path)
+    pixels = image.load()
+    width, height = image.size
 
-	if debug : print(Fore.GREEN + "Image loaded successfully" + Style.RESET_ALL)
+    if debug : print(Fore.GREEN + "Image loaded successfully" + Style.RESET_ALL)
 
-	Config = configparser.RawConfigParser()
-	Config.read(pathToConfig)
-	print()
-	if debug :
-		print(Fore.GREEN + "Config files loaded successfully" + Style.RESET_ALL)
+    Config = configparser.RawConfigParser()
+    Config.read(pathToConfig)
 
-	readConfigFile(Config)
+    if debug :
+       print(Fore.GREEN + "Config files loaded successfully" + Style.RESET_ALL)
 
-	CompleteRGBDict = PixelSearcher(height, width, image)
+    readConfigFile(Config)
 
-	if debug :
-		print("Done reading image")
+    CompleteRGBDict = PixelSearcher(height, width, image)
 
-	jsonPath = JSONObjects(CompleteRGBDict, outputPath, debug)
+    if debug :
+        print("Done reading image")
 
-	print("Image parser: " + Fore.GREEN + "Done" + Style.RESET_ALL)
+    internalList = createJSONObjects(CompleteRGBDict, outputPath, debug)
 
-	return jsonPath
+    unorderedList = findZValues(internalList)
+
+    completeListOrdered = createOrderedJSONStructure(unorderedList)
+
+    nestedList = fixNesting(completeListOrdered)
+
+    pathToJSON = writeToFile(outputPath, nestedList)
+
+    if debug :
+        print("Image is parsed and JSON structure created and saved to file on this location: \n"
+            + pathToJSON)
+
+    print("Image parser: " + Fore.GREEN + "Done" + Style.RESET_ALL)
+
+    return pathToJSON
 
 
 def readConfigFile(config):
@@ -122,7 +134,7 @@ def getType(color, platform):
         return None
 
 
-def JSONObjects(CompleteRGBDict, outputPath, debug=False):
+def createJSONObjects(CompleteRGBDict, outputPath, debug=False):
 
     objects = []
     ListToSaveJSONObjects = []
@@ -161,18 +173,7 @@ def JSONObjects(CompleteRGBDict, outputPath, debug=False):
         x.append(str(idNumber))
         idNumber += 1
 
-    unorderedList = findZValues(listToFindZValues)
-    completeListOrdered = createOrderedJSONStructure(unorderedList)
-
-    nestedList = fixNesting(completeListOrdered)
-
-    pathToJSON = WriteToFile(outputPath, nestedList)
-
-    if debug :
-        print("JSON structure created and saved to file on current location: \n"
-    		+ pathToJSON)
-
-    return pathToJSON
+    return listToFindZValues
 
 """
 	Go throug list and move childs to content of parent and return
@@ -258,7 +259,7 @@ def createOrderedJSONStructure(unorderedList):
 """
 	Write the ordered list to file in a JSON structure
 """
-def WriteToFile(outputPath, completeList):
+def writeToFile(outputPath, completeList):
 
     if not os.path.exists(outputPath):
         os.makedirs(outputPath)
@@ -314,32 +315,33 @@ def findEndCorners(corners, firstCorner, secondCorner):
 
 
 if __name__== "__main__":
-	ap = argparse.ArgumentParser()
+    ap = argparse.ArgumentParser()
 
-	ap.add_argument("inputImage", help="Path to selected image")
-	ap.add_argument("outputPath", help="Path to output directory")
+    ap.add_argument("inputImage", help="Path to selected image")
+    ap.add_argument("outputPath", help="Path to output directory")
 
-	platform = ap.add_mutually_exclusive_group(required=True)
-	platform.add_argument("--ios", help="Create a iOs project", action="store_true")
-	platform.add_argument("--html", help="Create a html web page", action="store_true")
-	platform.add_argument("--android", help="Create an android project", action="store_true")
+    platform = ap.add_mutually_exclusive_group(required=True)
+    platform.add_argument("--ios", help="Create a iOs project", action="store_true")
+    platform.add_argument("--html", help="Create a html web page", action="store_true")
+    platform.add_argument("--android", help="Create an android project", action="store_true")
 
-	ap.add_argument("-v", "--verbose", help="Verbose output level", action="store_true", default=False)
+    ap.add_argument("-v", "--verbose", help="Verbose output level", action="store_true", default=False)
 
-	args = ap.parse_args()
+    args = ap.parse_args()
 
-	pathToConfig = "colorTypes.ini"
+    pathToConfig = "colorTypes.ini"
 
-	if not(args.inputImage.lower().endswith(".png")):
-		print(Fore.RED + "File should be an image file (png)." + Style.RESET_ALL)
-	else:
-		path = os.path.abspath(args.inputImage)
-		outputPath = os.path.abspath(args.outputPath)
-		platform = -1
-		if args.ios:
-			platform = IOS
-		elif args.html:
-			platform = HTML
-		elif args.android:
-			platform = ANDROID
-		parseImage(path, outputPath, platform, args.verbose)
+    if not(args.inputImage.lower().endswith(".png")):
+        print(Fore.RED + "File should be an image file (png)." + Style.RESET_ALL)
+        print(Fore.RED + "Exiting..." + Style.RESET_ALL)
+    else:
+        path = os.path.abspath(args.inputImage)
+        outputPath = os.path.abspath(args.outputPath)
+        platform = -1
+        if args.ios:
+            platform = IOS
+        elif args.html:
+            platform = HTML
+        elif args.android:
+            platform = ANDROID
+        parseImage(path, outputPath, platform, args.verbose)
