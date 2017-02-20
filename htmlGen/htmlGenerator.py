@@ -97,7 +97,7 @@ def readElement(element):
 	# check if css class entry already exists and if not, add it to the list.
 	if not (tag, color, posX, posY) in cssClasses:
 		cssClasses.append((tag, color, posX, posY))
-    
+	
 	return tekst
 
 if __name__== "__main__":
