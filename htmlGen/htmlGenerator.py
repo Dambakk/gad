@@ -9,14 +9,14 @@ import configparser
 cssClasses = []
 colorTypes = {}
 
-def parseJson(jsonPath, title, outputPath, debug, externalRun=False):
+def parseJson(jsonPath, title, outputPath, debug):
 	if debug: print("Running json parser...")
 
 	Config = configparser.RawConfigParser()
 	Config.read("colorTypes.ini")
 	readConfigFile(Config)
 
-	if debug: print("Config file read")
+	if debug: print("Config files read")
 
 	#Open JSON file and load content
 	with open(jsonPath) as data_file:
@@ -37,14 +37,10 @@ def parseJson(jsonPath, title, outputPath, debug, externalRun=False):
 
 		template = fileTemplate.read()
 
-		#pprint(template)
-
-		if externalRun : from htmlGen import htmlUtils
-		else : import htmlUtils
-
 		html = ""
 		for e in data.items(): # iterate root elements
-			html += readElement(e[1][1])
+			if e[0] != "meta":
+				html += readElement(e[1][1])
 			
 		if debug: print("Done parsing JSON and generating html")
 
@@ -89,25 +85,22 @@ def readElement(element):
 	width = element["width"]
 	height = element["height"]
 	contentStructure = element["content"]
+	tag = colorTypes[color]
 
 	innerHTML = "Lorem" # must be here or else the html wont show anythong...
 	if len(contentStructure) > 0:
 		for i in range(0, len(contentStructure)):
-			innerHTML += readElement(contentStructure[str(i)][1]) # REDO real loop
+			innerHTML += readElement(contentStructure[str(i)][1])
 				
-	tag = colorTypes[color]
-
 	tekst = "<{0} class='{0}-{5}-{6}' width='{2}' height='{3}'>{4}</{0}>\n".format(tag, color, width, height, innerHTML, posX, posY)
-	# check if css class entry already exists and if not, add it to the list.
 	
+	# check if css class entry already exists and if not, add it to the list.
 	if not (tag, color, posX, posY) in cssClasses:
 		cssClasses.append((tag, color, posX, posY))
     
 	return tekst
 
 if __name__== "__main__":
-
-	# import htmlUtils
 
 	#Initialize argument parser
 	ap = argparse.ArgumentParser()
