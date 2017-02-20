@@ -9,7 +9,7 @@ from colorama import Fore, Back, Style
 from collections import OrderedDict
 import json
 import configparser
-
+from shutil import copy
 
 listenM = {}
 listenMP = {}
@@ -20,9 +20,41 @@ def copyProject(outputPath, debug, args):
     newListeH = []
     newListeMP = []
     configSetup()
-    
-    #Project does not exsist, create a new one
-    if not os.path.exists(outputPath):
+    if(os.path.exists(outputPath)):
+
+        # Finner ID'ene i ny og gammel JSON
+        newJSON, newJSONList = findIDJSON(args.jsonPath)
+        print(newJSON, " test")
+
+        oldJSONPath = outputPath+ "/exampleStructure1.json"
+        oldJSON, oldJSONList = findIDJSON(oldJSONPath)
+        print(oldJSON, " test1")
+
+        # Lager en liste med ID'er som er annerledes, blir flere hvis det er flere her, blir tom hvis ikke.
+        finalJSONID = []
+        for i in newJSON:
+            if(i not in oldJSON):
+                 finalJSONID.append(i)
+
+        print(finalJSONID)
+
+        # Henter ut en flat struktur, så hvert JSON object kan hentes ut fra en liste, så man slipper reqursion for å hente ut.
+        newFlatJSONList = []
+        for x in newJSONList.items():
+            readElementForNewListe(x[1][1], newFlatJSONList)
+
+        # Gjør samme med gammel JSON struktur
+        oldFlatJSONList = []
+        for y in oldJSONList.items():
+            readElementForNewListe(y[1][1], oldFlatJSONList)
+
+        #Funksjon for å sjekke om vi har riktige ID'er
+        checkIfCorrectID(newFlatJSONList, oldFlatJSONList, finalJSONID)
+
+        print(newFlatJSONList)
+
+    else:
+
         fromDirectory = "DemoApp"
         copy_tree(fromDirectory, outputPath)
         viewName = input("Enter a name for the new view: ")
@@ -30,30 +62,85 @@ def copyProject(outputPath, debug, args):
         os.rename(outputPath + "/DemoApp/ViewControllerBase.m", outputPath + "/DemoApp/" + viewName + "Base.m")
         os.rename(outputPath + "/DemoApp/ViewController.m", outputPath + "/DemoApp/" + viewName + ".m")
         os.rename(outputPath + "/DemoApp/ViewController.h", outputPath + "/DemoApp/" + viewName + ".h")
+        with open(args.jsonPath) as data_file:
+          data = OrderedDict()
+          try:
+            data = json.load(data_file, object_pairs_hook=OrderedDict)
+          except ValueError:
+            print(Fore.RED + "Something went wrong. Could not read JSON. Is the JSON structure correct?" + Style.RESET_ALL)
+            return
 
-    #Project already exists, check that all files are present
+          for e in data.items():
+            if e[0] != "meta":
+              readElement(e[1][1], newListeM, newListeH, newListeMP)
+        if debug: print("Done parsing the JSON elements")
+        replaceText(outputPath, "m", viewName, newListeM, newListeMP)
+        replaceText(outputPath, "h", viewName, newListeH, None)  
+
+    print(Fore.GREEN + "iOS generator done" + Fore.RESET)
+
+
+
+def checkIfCorrectID(newJSON, oldJSON, finalJSONID):
+
+    for i in newJSON:
+        tempListe = []
+        for j in oldJSON:
+
+            if(i[1] == j[1] and i[2] == j[2] and i[3] == j[3] and i[4] == j[4] and i[5] == j[5]):
+                i[0] = j[0]
+                oldJSON.remove(j)
+                break
+            elif(i[1] == j[1]):
+                tempListe.append(j)
+
+        if tempListe:
+            match = percentageMatch(tempListe, i)
+            i[0] = match[0]
+            oldJSON.remove(match)
+        elif finalJSONID:
+            print("We came here")
+            i[0] = finalJSONID.pop(0)
+
+
+        print(tempListe)
+
+def percentageMatch(tempListe, elementToCheck):
+    NUMBER = 200
+    TRESHOLD = 0.1
+    for currentElement in tempListe:
+        percentage = abs((currentElement[2]-elementToCheck[2])/NUMBER) + abs((currentElement[3]-elementToCheck[3])/NUMBER) + abs((currentElement[4]-elementToCheck[4])/NUMBER) + abs((currentElement[5]-elementToCheck[5])/NUMBER)
+        currentElement.append(percentage)
+        print(currentElement)
+
+    tempListe.sort(key=lambda x: x[8])
+
+    print(tempListe)
+
+    if(tempListe[0][8] < TRESHOLD):
+        del tempListe[0][-1]
+        print(tempListe[0])
+        return tempListe[0]
     else:
-        print("You say that you want to change an existing project. Checking for files and stuff...")
+        return None
 
 
-    with open(args.jsonPath) as data_file:
+def findIDJSON(filepath):
+    test = []
+    newData = []
+    with open(filepath) as data_file:
         data = OrderedDict()
         try:
             data = json.load(data_file, object_pairs_hook=OrderedDict)
         except ValueError:
-            print(Fore.RED + "Something went wrong. Could not read JSON. Is the JSON structure correct?" + Style.RESET_ALL)
-            return
+        	print(Fore.RED + "Something went wrong. Could not read JSON. Is the JSON structure correct?" + Style.RESET_ALL)
+        	return
 
         for e in data.items():
-            if e[0] != "meta":
-                readElement(e[1][1], newListeM, newListeH, newListeMP)
-    if debug: print("Done parsing the JSON elements")
+            readElementForID(e[1][1], test)
 
-    replaceText(outputPath, "m", viewName, newListeM, newListeMP)
-    replaceText(outputPath, "h", viewName, newListeH, None)
 
-    print(Fore.GREEN + "iOS generator done" + Fore.RESET)
-
+    return test, data
 
 def configSetup():
     Config = configparser.RawConfigParser()
@@ -101,7 +188,7 @@ def saveIOSobjectM(color, elementId, posX, posY, width, height, liste, newListeM
             if ("COLOR" in item[0]):
                 (r,g,b) = hex_to_rgb(color)
                 rgbColor = "colorWithRed:{0}/255.0 green:{1}/255.0 blue:{2}/255.0 alpha:1".format(r,g,b)
-                newItem = str(newItem).replace("COLOR", rgbColor) 
+                newItem = str(newItem).replace("COLOR", rgbColor)
             newListeM.append(newItem)
     else:
         print(Fore.RED + color + " - is not a valid color and will be ignored" + Style.RESET_ALL
@@ -134,8 +221,34 @@ def saveIOSobjectMP(newListeMP, parentColor, elementId, parent, listenMP, color)
                 newItem = str(item[0]).replace("NAME", str(name))
             newListeMP.append(newItem)
 
+def readElementForNewListe(element, newListe):
+        elementId = element['id']
+        contentStructure = element["content"]
+        color = element["color"]
+        posX = element["x"]
+        posY = element["y"]
+        width = element["width"]
+        height = element["height"]
+        parent = element["parent"]
+        parentColor = element['parentColor']
+        content = "Lorem"
+
+        newListe.append([elementId, color, posX, posY, width, height, parent, parentColor])
+
+        if len(contentStructure) > 0:
+            for i in range (0, len(contentStructure)):
+                content = readElementForNewListe(contentStructure[str(i)][1], newListe)
 
 
+def readElementForID(element, test):
+        elementId = element['id']
+        test.append(elementId)
+        contentStructure = element["content"]
+        content = "Lorem"
+
+        if len(contentStructure) > 0:
+            for i in range (0, len(contentStructure)):
+                content = readElementForID(contentStructure[str(i)][1], test)
 
 def readElement(element, newListeM, newListeH, newListeMP):
     elementId = element['id']
