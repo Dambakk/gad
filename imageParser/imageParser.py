@@ -8,47 +8,39 @@ import configparser
 import collections
 from collections import OrderedDict
 
+"""
+    Main parser function
+"""
+def parseImage(path, outputPath, debug):
+    image = Image.open(path)
+    width, height = image.size
 
-#Constants
-pathToConfig = "imageParser/colorTypes.ini"
-HTML = 0
-IOS = 1
-ANDROID = 2
+    if debug : print(Fore.GREEN + "Image loaded successfully" + Style.RESET_ALL)
 
-# Colors with the corresponding types
-colorTypes = {}
+    CompleteRGBDict = PixelSearcher(height, width, image)
 
-def parseImage(path, outputPath, platform, debug):
-	image = Image.open(path)
-	pixels = image.load()
-	width, height = image.size
+    if debug :
+        print("Done reading image")
 
-	if debug : print(Fore.GREEN + "Image loaded successfully" + Style.RESET_ALL)
+    internalList = createJSONObjects(CompleteRGBDict, outputPath, debug)
 
-	Config = configparser.RawConfigParser()
-	Config.read(pathToConfig)
-	print()
-	if debug :
-		print(Fore.GREEN + "Config files loaded successfully" + Style.RESET_ALL)
+    unorderedList = findZValues(internalList)
 
-	readConfigFile(Config)
+    completeListOrdered = createOrderedJSONStructure(unorderedList)
 
-	CompleteRGBDict = PixelSearcher(height, width, image)
+    nestedList = fixNesting(completeListOrdered)
 
-	if debug :
-		print("Done reading image")
+    pathToJSON = writeToFile(outputPath, nestedList, image)
 
-	jsonPath = JSONObjects(CompleteRGBDict, outputPath, debug)
+    if debug :
+        print("JSON structure created and saved to file")
 
-	print("Image parser: " + Fore.GREEN + "Done" + Style.RESET_ALL)
+    print("-"*15)
+    print(Fore.GREEN + "Image parser: Done." + Style.RESET_ALL
+        +"\nFound " + str(len(internalList)) + " elements."
+        +"\nJSON is stored on this path: " + Fore.YELLOW + pathToJSON + Style.RESET_ALL)
 
-	return jsonPath
-
-
-def readConfigFile(config):
-    options = config.options("color")
-    for option in options:
-        colorTypes["#" + option] = eval(config.get("color", option))
+    return pathToJSON
 
 
 # RGBA, not taking into account the a, yet which will be the transparent parameter
@@ -68,8 +60,7 @@ def PixelSearcher(height, width, image):
             r,g,b,a = image.getpixel((y, x))
             if (r != 255 or g != 255 or b != 255):
                 if(x < height and y < width and x > 0 and y > 0):
-                    RGB = r,g,b
-                    CheckIfCorner(RGBCornerPixels, x, y, image, number, RGB, zValue, idValue)
+                    CheckIfCorner(RGBCornerPixels, x, y, image, number, (r,g,b), zValue, idValue)
     return RGBCornerPixels
 
 """
@@ -109,21 +100,13 @@ def CheckIfCorner(RGBCornerPixels, x,y, image, number, RGB, zValue, idValue):
     if(RGB != RGB7 and RGB != RGB8):
         RGBCornerPixels[value1,value2,value3].append([x,y])
 
+
 def ConvertToHex(rgbColor):
     hexValue = '#%02x%02x%02x' % (rgbColor[0], rgbColor[1], rgbColor[2])
     return hexValue
 
 
-def getType(color, platform):
-    if colorTypes.get(color):
-        return colorTypes[color][platform]
-    else:
-        print(Fore.RED + "Color is not known and ignored: " +  Style.RESET_ALL + color)
-        return None
-
-
-def JSONObjects(CompleteRGBDict, outputPath, debug=False):
-
+def createJSONObjects(CompleteRGBDict, outputPath, debug=False):
     objects = []
     ListToSaveJSONObjects = []
     listToFindZValues = []
@@ -153,26 +136,13 @@ def JSONObjects(CompleteRGBDict, outputPath, debug=False):
             elements = [hexValue,first, second, third, fourth]
             listToFindZValues.append(elements)
 
-    """
-        Append different ID to all elements
-    """
+    #Append different ID to all elements
     idNumber = 0
     for x in listToFindZValues:
         x.append(str(idNumber))
         idNumber += 1
 
-    unorderedList = findZValues(listToFindZValues)
-    completeListOrdered = createOrderedJSONStructure(unorderedList)
-
-    nestedList = fixNesting(completeListOrdered)
-
-    pathToJSON = WriteToFile(outputPath, nestedList)
-
-    if debug :
-        print("JSON structure created and saved to file on current location: \n"
-    		+ pathToJSON)
-
-    return pathToJSON
+    return listToFindZValues
 
 """
 	Go throug list and move childs to content of parent and return
@@ -186,6 +156,7 @@ def fixNesting(elementsOrdered):
         parent = e[1]["parent"]
         if parent is not -1: #if not root element, move ref to content of parent
             size = len(elementsOrdered[str(parent)]["content"])
+            e[1]['parentColor'] = elementsOrdered[str(parent)]["color"]
             elementsOrdered[str(parent)]["content"][size] = e
 
     #Move root elemets with nested elements to own list
@@ -228,50 +199,52 @@ def findZValues(listToFindZValues):
     return listToFindZValues
 
 
+
 """
     Takes an unordered list and creates an ordered list and returns this new list
 """
 def createOrderedJSONStructure(unorderedList):
-	completeListOrdered = OrderedDict()
-	for element in unorderedList:
-	    data2 = OrderedDict()
-	    data2['id'] = int(element[5])
-	    try:
-	        data2['parent'] = int(element[6]) # add parent if any
-	    except:
-	        data2['parent'] = -1 # if not any parent, element is root element and parent is -1
-	    data2['color'] = element[0]
-	    data2['x'] = element[1][1]
-	    data2['y'] = element[1][0]
-	    data2["width"] = element[2][1] - element[1][1]
-	    data2["height"] = element[3][0] - element[1][0]
-	    data2["content"] = OrderedDict()
+    completeListOrdered = OrderedDict()
+    for element in unorderedList:
+        data2 = OrderedDict()
+        data2['id'] = int(element[5])
+        try:
+            data2['parent'] = int(element[6]) # add parent if any
+        except:
+            data2['parent'] = -1 # if not any parent, element is root element and parent is -1
+        data2['parentColor'] = ""
+        data2['color'] = element[0]
+        data2['x'] = element[1][1]
+        data2['y'] = element[1][0]
+        data2["width"] = element[2][1] - element[1][1]
+        data2["height"] = element[3][0] - element[1][0]
+        data2["content"] = OrderedDict()
 
-	    completeListOrdered[element[5]] = data2
+        completeListOrdered[element[5]] = data2
 
-	return completeListOrdered
+    return completeListOrdered
 
 
 """
 	Write the ordered list to file in a JSON structure
 """
-def WriteToFile(outputPath, completeList):
-
+def writeToFile(outputPath, completeList, image):
+    filePath = outputPath+"/imageRepresentation.json"
     if not os.path.exists(outputPath):
         os.makedirs(outputPath)
-    f = open(outputPath+"/imageRepresentation.json", "w+")
+    f = open(filePath, "w+")
+
+    completeList["meta"] = "This is some test data"
 
     json.dump(completeList, f)
     f.close()
-    return outputPath + "/imageRepresentation.json"
-
+    return filePath
 
 
 """
     Finds the four corners of the given box.
 """
 def findTheSquares(corners, squaresList):
-
     while len(corners) != 0:
         firstCorner = corners[0]
         secondCorner = corners[1]
@@ -303,40 +276,22 @@ def findEndCorners(corners, firstCorner, secondCorner):
             break
         number += 1
 
-    returnValue = firstValue,secondValue
-
-    return returnValue
+    return (firstValue,secondValue)
 
 
 
 
 if __name__== "__main__":
-	ap = argparse.ArgumentParser()
+    ap = argparse.ArgumentParser()
+    ap.add_argument("inputImage", help="Path to selected image")
+    ap.add_argument("outputPath", help="Path to output directory")
+    ap.add_argument("-v", "--verbose", help="Verbose output level", action="store_true", default=False)
+    args = ap.parse_args()
 
-	ap.add_argument("inputImage", help="Path to selected image")
-	ap.add_argument("outputPath", help="Path to output directory")
-
-	platform = ap.add_mutually_exclusive_group(required=True)
-	platform.add_argument("--ios", help="Create a iOs project", action="store_true")
-	platform.add_argument("--html", help="Create a html web page", action="store_true")
-	platform.add_argument("--android", help="Create an android project", action="store_true")
-
-	ap.add_argument("-v", "--verbose", help="Verbose output level", action="store_true", default=False)
-
-	args = ap.parse_args()
-
-	pathToConfig = "colorTypes.ini"
-
-	if not(args.inputImage.lower().endswith(".png")):
-		print(Fore.RED + "File should be an image file (png)." + Style.RESET_ALL)
-	else:
-		path = os.path.abspath(args.inputImage)
-		outputPath = os.path.abspath(args.outputPath)
-		platform = -1
-		if args.ios:
-			platform = IOS
-		elif args.html:
-			platform = HTML
-		elif args.android:
-			platform = ANDROID
-		parseImage(path, outputPath, platform, args.verbose)
+    if not(args.inputImage.lower().endswith(".png")):
+        print(Fore.RED + "File should be an image file (png)." + Style.RESET_ALL)
+        print(Fore.RED + "Exiting..." + Style.RESET_ALL)
+    else:
+        imagePath = os.path.abspath(args.inputImage)
+        outputPath = os.path.abspath(args.outputPath)
+        parseImage(imagePath, outputPath, args.verbose)
