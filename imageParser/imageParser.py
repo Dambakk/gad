@@ -8,6 +8,7 @@ import configparser
 import collections
 from collections import OrderedDict
 import time
+import pprint
 
 """
 	Main parser function
@@ -140,7 +141,7 @@ def createJSONObjects(CompleteRGBDict, outputPath, debug=False):
 	#Append different ID to all elements
 	idNumber = 0
 	for x in listToFindZValues:
-		x.append(str(idNumber))
+		x.append(idNumber)
 		idNumber += 1
 
 	return listToFindZValues
@@ -152,13 +153,15 @@ def createJSONObjects(CompleteRGBDict, outputPath, debug=False):
 def fixNesting(elementsOrdered):
 	nestedList = OrderedDict()
 
+	#pprint(elementsOrdered)
+	print(elementsOrdered)
 	#Connect those with parents by move references around
 	for e in elementsOrdered.items():
 		parent = e[1]["parent"]
 		if parent is not -1: #if not root element, move ref to content of parent
-			size = len(elementsOrdered[str(parent)]["content"])
-			e[1]['parentColor'] = elementsOrdered[str(parent)]["color"]
-			elementsOrdered[str(parent)]["content"][size] = e
+			size = len(elementsOrdered[parent]["content"])
+			e[1]['parentColor'] = elementsOrdered[parent]["color"]
+			elementsOrdered[parent]["content"][size] = e
 
 	#Move root elemets with nested elements to own list
 	for e in elementsOrdered.items():
@@ -205,6 +208,7 @@ def findZValues(listToFindZValues):
 	Takes an unordered list and creates an ordered list and returns this new list
 """
 def createOrderedJSONStructure(unorderedList):
+	print("Unordered list: ", unorderedList)
 	completeListOrdered = OrderedDict()
 	for element in unorderedList:
 		data2 = OrderedDict()

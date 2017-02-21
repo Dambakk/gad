@@ -10,6 +10,10 @@ from collections import OrderedDict
 import json
 import configparser
 from shutil import copy
+from pprint import pprint
+import glob
+import time
+import subprocess 
 
 listenM = {}
 listenMP = {}
@@ -23,37 +27,79 @@ def copyProject(outputPath, debug, args):
 	if(os.path.exists(outputPath)):
 
 		# Finner ID'ene i ny og gammel JSON
-		newJSON, newJSONList = findIDJSON(args.jsonPath)
-		print(newJSON, " test")
+		newJSON, newJSONList, newMeta = findIDJSON(args.jsonPath)
+		#print(newJSON, " test")
 
-		oldJSONPath = outputPath+ "/exampleStructure1.json"
-		oldJSON, oldJSONList = findIDJSON(oldJSONPath)
-		print(oldJSON, " test1")
+		oldJSONPath = outputPath+ "/json/imageRepresentation.json"
+		oldJSON, oldJSONList, oldMeta = findIDJSON(oldJSONPath)
+		#print(oldJSON, " test1")
 
+
+		#Check for same image size and other requirements (e.g. that all project files are present...
+		if oldMeta["imageWidth"] != newMeta["imageWidth"] or oldMeta["imageHeight"] != newMeta["imageHeight"]:
+			if args.force:
+				print(Fore.RED + "Warning! " + Fore.YELLOW + "The old and new image has not the same size."
+					+"\nThis may result in some unexpected behavior and results. You added 'force' and we will continue." + Style.RESET_ALL)
+			else:
+				print(Fore.RED+"The old and new image has not same width and heigth. This is a requirement."
+					+"\nSee the documentation for more information."
+					+Fore.YELLOW+"\nIf you still want to continue, run the same command with '--force' on the end."
+					+Fore.RED+"\nExiting..."+ Style.RESET_ALL)
+
+
+				
 		# Lager en liste med ID'er som er annerledes, blir flere hvis det er flere her, blir tom hvis ikke.
 		finalJSONID = []
 		for i in newJSON:
 			if(i not in oldJSON):
 				 finalJSONID.append(i)
 
-		print(finalJSONID)
-
 		# Henter ut en flat struktur, så hvert JSON object kan hentes ut fra en liste, så man slipper reqursion for å hente ut.
 		newFlatJSONList = []
 		for x in newJSONList.items():
-			readElementForNewListe(x[1][1], newFlatJSONList)
+			if x[0] != "meta":
+				readElementForNewListe(x[1][1], newFlatJSONList)
 
 		# Gjør samme med gammel JSON struktur
 		oldFlatJSONList = []
 		for y in oldJSONList.items():
-			readElementForNewListe(y[1][1], oldFlatJSONList)
+			if y[0] != "meta":
+				readElementForNewListe(y[1][1], oldFlatJSONList)
 
 		#Funksjon for å sjekke om vi har riktige ID'er
 		checkIfCorrectID(newFlatJSONList, oldFlatJSONList, finalJSONID)
 
-		print(newFlatJSONList)
+		updatedJSON = regenerateJSON(newFlatJSONList)
 
-	else:
+
+		#Skrive til fil!
+		writeJSONToFile(outputPath, updatedJSON, newMeta)
+		
+		print(Fore.CYAN + "All editable views in project:" + Style.RESET_ALL)
+		files = [f for f in os.listdir(outputPath + "/DemoApp/") if re.match("[a-zA-Z0-9]*Base.h", f)]
+		for f in files:
+			print(Fore.YELLOW + "--> " + Style.RESET_ALL + f)
+		print("Write the name of the header file of the view you want to change: ")
+		fileToBeChanged = input("Full file name: ")
+		while fileToBeChanged not in files:
+			for f in files:
+				print(Fore.YELLOW + "--> " + Style.RESET_ALL + f)
+			print("Not a valid file name. Try again. Enter file name: ")
+			fileToBeChanged = input("Full file name: ")
+
+		fileToBeChanged = fileToBeChanged[:-2]
+		print("All good! File to be changed: ", fileToBeChanged)
+
+		"""
+
+			Okei, Einar... Dette er greia... Variabelen fileToBeChanged inneholder
+			nå filnavnet, uten ending (.h/m) til viewet som skal endres. Så når
+			du skal overskrive en fil så overskriv filen med dette navnet!
+			Takk for meg. 
+
+		"""
+
+	else: #CREATING A NEW VIEW
 
 		fromDirectory = "DemoApp"
 		copy_tree(fromDirectory, outputPath)
@@ -63,22 +109,78 @@ def copyProject(outputPath, debug, args):
 		os.rename(outputPath + "/DemoApp/ViewController.m", outputPath + "/DemoApp/" + viewName + ".m")
 		os.rename(outputPath + "/DemoApp/ViewController.h", outputPath + "/DemoApp/" + viewName + ".h")
 		with open(args.jsonPath) as data_file:
-		  data = OrderedDict()
-		  try:
-			data = json.load(data_file, object_pairs_hook=OrderedDict)
-		  except ValueError:
-			print(Fore.RED + "Something went wrong. Could not read JSON. Is the JSON structure correct?" + Style.RESET_ALL)
-			return
+			data = OrderedDict()
+			try:
+				data = json.load(data_file, object_pairs_hook=OrderedDict)
+			except ValueError:
+				print(Fore.RED + "Something went wrong. Could not read JSON. Is the JSON structure correct?" + Style.RESET_ALL)
+				return
 
-		  for e in data.items():
+		for e in data.items():
+			print(e)
 			if e[0] != "meta":
-			  readElement(e[1][1], newListeM, newListeH, newListeMP)
+				readElement(e[1][1], newListeM, newListeH, newListeMP)
 		if debug: print("Done parsing the JSON elements")
+
 		replaceText(outputPath, "m", viewName, newListeM, newListeMP)
 		replaceText(outputPath, "h", viewName, newListeH, None)  
 
 	print(Fore.GREEN + "iOS generator done" + Fore.RESET)
 
+
+def regenerateJSON(oldList):
+
+	#Create a flat, ordered structure
+	newFlatJson = OrderedDict()
+	for element in oldList:
+		data = OrderedDict()
+		data['id'] = element[0]
+		data['parent'] = element[6]
+		data['parentColor'] = element[7]
+		data['color'] = element[1]
+		data['x'] = element[2]
+		data['y'] = element[3]
+		data["width"] = element[4]
+		data["height"] = element[5]
+		data["content"] = OrderedDict()
+
+		newFlatJson[element[0]] = data
+
+	#Recreate the nested structure
+	nestedList = OrderedDict()
+
+	#Connect those with parents by move references around
+	for e in newFlatJson.items():
+		parent = e[1]["parent"]
+		if parent is not -1: #if not root element, move ref to content of parent
+			size = len(newFlatJson[parent]["content"])
+			e[1]['parentColor'] = newFlatJson[parent]["color"]
+			newFlatJson[parent]["content"][size] = e
+
+	#Move root elemets with nested elements to own list
+	for e in newFlatJson.items():
+		parent = e[1]["parent"]
+		if parent is -1:
+			nestedList[e[0]] = e
+
+	return nestedList
+
+"""
+	Write the ordered list to file in a JSON structure
+"""
+def writeJSONToFile(outputPath, completeList, meta):
+	filePath = outputPath+"/json/imageRepresentation.json"
+	if not os.path.exists(outputPath):
+		os.makedirs(outputPath)
+	f = open(filePath, "w+")
+
+	meta["date"] = time.strftime("%d/%m/%Y")
+	
+	completeList["meta"] = meta
+
+	json.dump(completeList, f)
+	f.close()
+	return filePath
 
 
 def checkIfCorrectID(newJSON, oldJSON, finalJSONID):
@@ -99,11 +201,11 @@ def checkIfCorrectID(newJSON, oldJSON, finalJSONID):
 			i[0] = match[0]
 			oldJSON.remove(match)
 		elif finalJSONID:
-			print("We came here")
+			#print("We came here")
 			i[0] = finalJSONID.pop(0)
 
 
-		print(tempListe)
+		#print(tempListe)
 
 def percentageMatch(tempListe, elementToCheck):
 	NUMBER = 200
@@ -136,11 +238,14 @@ def findIDJSON(filepath):
 			print(Fore.RED + "Something went wrong. Could not read JSON. Is the JSON structure correct?" + Style.RESET_ALL)
 			return
 
+		meta = data["meta"]
+		#print("META: ", meta)
 		for e in data.items():
-			readElementForID(e[1][1], test)
+			if e[0] != "meta":
+				readElementForID(e[1][1], test)
 
 
-	return test, data
+	return test, data, meta
 
 def configSetup():
 	Config = configparser.RawConfigParser()
@@ -231,24 +336,22 @@ def readElementForNewListe(element, newListe):
 		height = element["height"]
 		parent = element["parent"]
 		parentColor = element['parentColor']
-		content = "Lorem"
 
 		newListe.append([elementId, color, posX, posY, width, height, parent, parentColor])
 
 		if len(contentStructure) > 0:
 			for i in range (0, len(contentStructure)):
-				content = readElementForNewListe(contentStructure[str(i)][1], newListe)
+				readElementForNewListe(contentStructure[str(i)][1], newListe)
 
 
 def readElementForID(element, test):
 		elementId = element['id']
 		test.append(elementId)
 		contentStructure = element["content"]
-		content = "Lorem"
 
 		if len(contentStructure) > 0:
 			for i in range (0, len(contentStructure)):
-				content = readElementForID(contentStructure[str(i)][1], test)
+				readElementForID(contentStructure[str(i)][1], test)
 
 def readElement(element, newListeM, newListeH, newListeMP):
 	elementId = element['id']
@@ -309,6 +412,7 @@ if __name__== "__main__":
 	ap.add_argument("jsonPath", help="Path to JSON structure") #NB! Vi kan også bruke styles her! :)
 	ap.add_argument("outputPath", help="Output directory")
 	ap.add_argument("-v", "--verbose", help="Verbose output", action="store_true", default=False)
+	ap.add_argument("-f", "--force", help="Force continue. May result in overwrite and unexpected results.", action="store_true", default=False)
 	args = ap.parse_args()
 	
 	copyProject(args.outputPath, args.verbose, args)
