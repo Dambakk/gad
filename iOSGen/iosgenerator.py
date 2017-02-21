@@ -75,30 +75,49 @@ def copyProject(outputPath, debug, args):
 		#Skrive til fil!
 		writeJSONToFile(outputPath, updatedJSON, newMeta)
 		
-		print(Fore.CYAN + "All editable views in project:" + Style.RESET_ALL)
 		files = [f for f in os.listdir(outputPath + "/DemoApp/") if re.match("[a-zA-Z0-9]*Base.h", f)]
-		for f in files:
-			print(Fore.YELLOW + "--> " + Style.RESET_ALL + f)
-		print("Write the name of the header file of the view you want to change: ")
-		fileToBeChanged = input("Full file name: ")
-		while fileToBeChanged not in files:
+		if len(files) == 1:
+			fileToBeChanged = files[0]
+			if debug: print("Found only one view meeting the requirements: " + fileToBeChanged)
+		elif len(files) == 0:
+			print(Fore.RED + "Error! " + Fore.YELLOW + "Did not find any views matching the requirements."
+				+"\nSee the documentation for more information. Error code: xx" + Style.RESET_ALL)
+			return
+		else:
+			print(Fore.CYAN + "All editable views in project:" + Style.RESET_ALL)
 			for f in files:
 				print(Fore.YELLOW + "--> " + Style.RESET_ALL + f)
-			print("Not a valid file name. Try again. Enter file name: ")
+			print("Write the name of the header file of the view you want to change: ")
 			fileToBeChanged = input("Full file name: ")
+			while fileToBeChanged not in files:
+				for f in files:
+					print(Fore.YELLOW + "--> " + Style.RESET_ALL + f)
+				print("Not a valid file name. Try again. Enter file name: ")
+				fileToBeChanged = input("Full file name: ")
 
 		fileToBeChanged = fileToBeChanged[:-2]
-		print("All good! File to be changed: ", fileToBeChanged)
+		print(Fore.GREEN + "All good so far! " + Style.RESET_ALL + " File to be changed: " + Fore.CYAN + fileToBeChanged + Style.RESET_ALL)
 
-		"""
+		#Kopiere mal til ny dest.
+		copy("DemoApp/DemoApp/ViewControllerBase.m", outputPath + "/DemoApp/")
+		copy("DemoApp/DemoApp/ViewControllerBase.h", outputPath + "/DemoApp/")
+		
+		os.remove(outputPath + "/DemoApp/" + fileToBeChanged + ".h")
+		os.remove(outputPath + "/DemoApp/" + fileToBeChanged + ".m")
+		
+		
+		for e in updatedJSON.items():
+			if e[0] != "meta":
+				readElement(e[1][1], newListeM, newListeH, newListeMP)
+		if debug: print("Done parsing the JSON elements")
 
-			Okei, Einar... Dette er greia... Variabelen fileToBeChanged inneholder
-			nå filnavnet, uten ending (.h/m) til viewet som skal endres. Så når
-			du skal overskrive en fil så overskriv filen med dette navnet!
-			Takk for meg. 
+		replaceText(outputPath, "m", "ViewController", newListeM, newListeMP)
+		replaceText(outputPath, "h", "ViewController", newListeH, None) 
 
-		"""
-
+		os.rename(outputPath + "/DemoApp/ViewControllerBase.m", outputPath + "/DemoApp/" + fileToBeChanged + ".m")
+		os.rename(outputPath + "/DemoApp/ViewControllerBase.h", outputPath + "/DemoApp/" + fileToBeChanged + ".h")
+		
+		
 	else: #CREATING A NEW VIEW
 
 		fromDirectory = "DemoApp"
@@ -117,15 +136,17 @@ def copyProject(outputPath, debug, args):
 				return
 
 		for e in data.items():
-			print(e)
 			if e[0] != "meta":
 				readElement(e[1][1], newListeM, newListeH, newListeMP)
 		if debug: print("Done parsing the JSON elements")
 
 		replaceText(outputPath, "m", viewName, newListeM, newListeMP)
-		replaceText(outputPath, "h", viewName, newListeH, None)  
+		replaceText(outputPath, "h", viewName, newListeH, None)
+
+		writeJSONToFile(outputPath, data, data["meta"]) 
 
 	print(Fore.GREEN + "iOS generator done" + Fore.RESET)
+
 
 
 def regenerateJSON(oldList):
@@ -213,15 +234,15 @@ def percentageMatch(tempListe, elementToCheck):
 	for currentElement in tempListe:
 		percentage = abs((currentElement[2]-elementToCheck[2])/NUMBER) + abs((currentElement[3]-elementToCheck[3])/NUMBER) + abs((currentElement[4]-elementToCheck[4])/NUMBER) + abs((currentElement[5]-elementToCheck[5])/NUMBER)
 		currentElement.append(percentage)
-		print(currentElement)
+		#print(currentElement)
 
 	tempListe.sort(key=lambda x: x[8])
 
-	print(tempListe)
+	#print(tempListe)
 
 	if(tempListe[0][8] < TRESHOLD):
 		del tempListe[0][-1]
-		print(tempListe[0])
+		#print(tempListe[0])
 		return tempListe[0]
 	else:
 		return None
@@ -404,8 +425,8 @@ def replaceText(templatePath, fileType, filename, elements, elements2):
 	file3.close()
 	file4.close()
 
-	if(os.path.exists(templatePath + '/NewFile.txt')):
-		os.remove(templatePath + '/NewFile.txt')
+	#if(os.path.exists(templatePath + '/NewFile.txt')):
+	os.remove(templatePath + '/NewFile.txt')
 
 if __name__== "__main__":
 	ap = argparse.ArgumentParser()
