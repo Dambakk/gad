@@ -13,7 +13,7 @@ from shutil import copy
 from pprint import pprint
 import glob
 import time
-import subprocess 
+import subprocess
 
 listenM = {}
 listenMP = {}
@@ -47,7 +47,7 @@ def copyProject(outputPath, debug, args):
 					+Fore.RED+"\nExiting..."+ Style.RESET_ALL)
 
 
-				
+
 		# Lager en liste med ID'er som er annerledes, blir flere hvis det er flere her, blir tom hvis ikke.
 		finalJSONID = []
 		for i in newJSON:
@@ -74,7 +74,7 @@ def copyProject(outputPath, debug, args):
 
 		#Skrive til fil!
 		writeJSONToFile(outputPath, updatedJSON, newMeta)
-		
+
 		files = [f for f in os.listdir(outputPath + "/DemoApp/") if re.match("[a-zA-Z0-9]*Base.h", f)]
 		if len(files) == 1:
 			fileToBeChanged = files[0]
@@ -101,23 +101,23 @@ def copyProject(outputPath, debug, args):
 		#Kopiere mal til ny dest.
 		copy("DemoApp/DemoApp/ViewControllerBase.m", outputPath + "/DemoApp/")
 		copy("DemoApp/DemoApp/ViewControllerBase.h", outputPath + "/DemoApp/")
-		
+
 		os.remove(outputPath + "/DemoApp/" + fileToBeChanged + ".h")
 		os.remove(outputPath + "/DemoApp/" + fileToBeChanged + ".m")
-		
-		
+
+
 		for e in updatedJSON.items():
 			if e[0] != "meta":
 				readElement(e[1][1], newListeM, newListeH, newListeMP)
 		if debug: print("Done parsing the JSON elements")
 
 		replaceText(outputPath, "m", "ViewController", newListeM, newListeMP)
-		replaceText(outputPath, "h", "ViewController", newListeH, None) 
+		replaceText(outputPath, "h", "ViewController", newListeH, None)
 
 		os.rename(outputPath + "/DemoApp/ViewControllerBase.m", outputPath + "/DemoApp/" + fileToBeChanged + ".m")
 		os.rename(outputPath + "/DemoApp/ViewControllerBase.h", outputPath + "/DemoApp/" + fileToBeChanged + ".h")
-		
-		
+
+
 	else: #CREATING A NEW VIEW
 
 		fromDirectory = "DemoApp"
@@ -143,7 +143,7 @@ def copyProject(outputPath, debug, args):
 		replaceText(outputPath, "m", viewName, newListeM, newListeMP)
 		replaceText(outputPath, "h", viewName, newListeH, None)
 
-		writeJSONToFile(outputPath, data, data["meta"]) 
+		writeJSONToFile(outputPath, data, data["meta"])
 
 	print(Fore.GREEN + "iOS generator done" + Fore.RESET)
 
@@ -196,7 +196,7 @@ def writeJSONToFile(outputPath, completeList, meta):
 	f = open(filePath, "w+")
 
 	meta["date"] = time.strftime("%d/%m/%Y")
-	
+
 	completeList["meta"] = meta
 
 	json.dump(completeList, f)
@@ -208,11 +208,13 @@ def checkIfCorrectID(newJSON, oldJSON, finalJSONID):
 
 	for i in newJSON:
 		tempListe = []
+		isBreak = False
 		for j in oldJSON:
 
 			if(i[1] == j[1] and i[2] == j[2] and i[3] == j[3] and i[4] == j[4] and i[5] == j[5]):
 				i[0] = j[0]
 				oldJSON.remove(j)
+				isBreak = True
 				break
 			elif(i[1] == j[1]):
 				tempListe.append(j)
@@ -221,7 +223,7 @@ def checkIfCorrectID(newJSON, oldJSON, finalJSONID):
 			match = percentageMatch(tempListe, i)
 			i[0] = match[0]
 			oldJSON.remove(match)
-		elif finalJSONID:
+		elif finalJSONID and isBreak == True:
 			#print("We came here")
 			i[0] = finalJSONID.pop(0)
 
@@ -392,7 +394,7 @@ def readElement(element, newListeM, newListeH, newListeMP):
 	if len(contentStructure) > 0:
 		for i in range (0, len(contentStructure)):
 			readElement(contentStructure[str(i)][1], newListeM, newListeH, newListeMP)
-	  
+
 
 def replaceText(templatePath, fileType, filename, elements, elements2):
 	templatePath = templatePath+"/DemoApp"
@@ -435,5 +437,5 @@ if __name__== "__main__":
 	ap.add_argument("-v", "--verbose", help="Verbose output", action="store_true", default=False)
 	ap.add_argument("-f", "--force", help="Force continue. May result in overwrite and unexpected results.", action="store_true", default=False)
 	args = ap.parse_args()
-	
+
 	copyProject(args.outputPath, args.verbose, args)
