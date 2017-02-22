@@ -26,11 +26,36 @@ def copyProject(outputPath, debug, args):
 	configSetup()
 	if(os.path.exists(outputPath)):
 
+		#Get the name of the view to be changed
+		files = [f for f in os.listdir(outputPath + "/DemoApp/") if re.match("[a-zA-Z0-9]*Base.h", f)]
+		if len(files) == 1:
+			fileToBeChanged = files[0]
+			if debug: print("Found only one view meeting the requirements: " + fileToBeChanged)
+		elif len(files) == 0:
+			print(Fore.RED + "Error! " + Fore.YELLOW + "Did not find any views matching the requirements."
+				+"\nSee the documentation for more information. Error code: xx" + Style.RESET_ALL)
+			return
+		else:
+			print(Fore.CYAN + "All editable views in project:" + Style.RESET_ALL)
+			for f in files:
+				print(Fore.YELLOW + "--> " + Style.RESET_ALL + f)
+			print("Write the name of the header file of the view you want to change: ")
+			fileToBeChanged = input("Full file name: ")
+			while fileToBeChanged not in files:
+				for f in files:
+					print(Fore.YELLOW + "--> " + Style.RESET_ALL + f)
+				print("Not a valid file name. Try again. Enter file name: ")
+				fileToBeChanged = input("Full file name: ")
+
+		fileToBeChanged = fileToBeChanged[:-2]
+		print(Fore.GREEN + "All good so far! " + Style.RESET_ALL + " File to be changed: " + Fore.CYAN + fileToBeChanged + Style.RESET_ALL)
+
+
 		# Finner ID'ene i ny og gammel JSON
 		newJSON, newJSONList, newMeta = findIDJSON(args.jsonPath)
 		#print(newJSON, " test")
 
-		oldJSONPath = outputPath+ "/json/imageRepresentation.json"
+		oldJSONPath = outputPath+ "/json/" + fileToBeChanged[:-4] + ".json"
 		oldJSON, oldJSONList, oldMeta = findIDJSON(oldJSONPath)
 		#print(oldJSON, " test1")
 
@@ -72,39 +97,12 @@ def copyProject(outputPath, debug, args):
 		updatedJSON = regenerateJSON(newFlatJSONList)
 
 
-		#Skrive til fil!
-		writeJSONToFile(outputPath, updatedJSON, newMeta)
-
-		files = [f for f in os.listdir(outputPath + "/DemoApp/") if re.match("[a-zA-Z0-9]*Base.h", f)]
-		if len(files) == 1:
-			fileToBeChanged = files[0]
-			if debug: print("Found only one view meeting the requirements: " + fileToBeChanged)
-		elif len(files) == 0:
-			print(Fore.RED + "Error! " + Fore.YELLOW + "Did not find any views matching the requirements."
-				+"\nSee the documentation for more information. Error code: xx" + Style.RESET_ALL)
-			return
-		else:
-			print(Fore.CYAN + "All editable views in project:" + Style.RESET_ALL)
-			for f in files:
-				print(Fore.YELLOW + "--> " + Style.RESET_ALL + f)
-			print("Write the name of the header file of the view you want to change: ")
-			fileToBeChanged = input("Full file name: ")
-			while fileToBeChanged not in files:
-				for f in files:
-					print(Fore.YELLOW + "--> " + Style.RESET_ALL + f)
-				print("Not a valid file name. Try again. Enter file name: ")
-				fileToBeChanged = input("Full file name: ")
-
-		fileToBeChanged = fileToBeChanged[:-2]
-		print(Fore.GREEN + "All good so far! " + Style.RESET_ALL + " File to be changed: " + Fore.CYAN + fileToBeChanged + Style.RESET_ALL)
-
 		#Kopiere mal til ny dest.
 		copy("DemoApp/DemoApp/ViewControllerBase.m", outputPath + "/DemoApp/")
 		copy("DemoApp/DemoApp/ViewControllerBase.h", outputPath + "/DemoApp/")
 
 		os.remove(outputPath + "/DemoApp/" + fileToBeChanged + ".h")
 		os.remove(outputPath + "/DemoApp/" + fileToBeChanged + ".m")
-
 
 		for e in updatedJSON.items():
 			if e[0] != "meta":
@@ -117,6 +115,10 @@ def copyProject(outputPath, debug, args):
 		os.rename(outputPath + "/DemoApp/ViewControllerBase.m", outputPath + "/DemoApp/" + fileToBeChanged + ".m")
 		os.rename(outputPath + "/DemoApp/ViewControllerBase.h", outputPath + "/DemoApp/" + fileToBeChanged + ".h")
 
+		#Skrive endringene i json til fil
+		#(The [:-4]-bit removes 'Base' from the filename)
+		writeJSONToFile(outputPath, updatedJSON, newMeta, fileToBeChanged[:-4])
+		
 
 	else: #CREATING A NEW VIEW
 
@@ -143,7 +145,7 @@ def copyProject(outputPath, debug, args):
 		replaceText(outputPath, "m", viewName, newListeM, newListeMP)
 		replaceText(outputPath, "h", viewName, newListeH, None)
 
-		writeJSONToFile(outputPath, data, data["meta"])
+		writeJSONToFile(outputPath, data, data["meta"], viewName)
 
 	print(Fore.GREEN + "iOS generator done" + Fore.RESET)
 
@@ -189,8 +191,8 @@ def regenerateJSON(oldList):
 """
 	Write the ordered list to file in a JSON structure
 """
-def writeJSONToFile(outputPath, completeList, meta):
-	filePath = outputPath+"/json/imageRepresentation.json"
+def writeJSONToFile(outputPath, completeList, meta, viewName):
+	filePath = outputPath+"/json/"+viewName+".json"
 	if not os.path.exists(outputPath):
 		os.makedirs(outputPath)
 	f = open(filePath, "w+")
