@@ -20,115 +20,127 @@ listenMP = {}
 listenH = {}
 
 def copyProject(outputPath, debug, args):
-	newListeM = []
-	newListeH = []
-	newListeMP = []
+	
 	configSetup()
 	if(os.path.exists(outputPath)):
+		#Check that all project files exists.
 
-		#Get the name of the view to be changed
-		files = [f for f in os.listdir(outputPath + "/DemoApp/") if re.match("[a-zA-Z0-9]*Base.h", f)]
-		if len(files) == 1:
-			fileToBeChanged = files[0]
-			if debug: print("Found only one view meeting the requirements: " + fileToBeChanged)
-		elif len(files) == 0:
-			print(Fore.RED + "Error! " + Fore.YELLOW + "Did not find any views matching the requirements."
-				+"\nSee the documentation for more information. Error code: xx" + Style.RESET_ALL)
-			return
-		else:
-			print(Fore.CYAN + "All editable views in project:" + Style.RESET_ALL)
-			for f in files:
-				print(Fore.YELLOW + "--> " + Style.RESET_ALL + f)
-			print("Write the name of the header file of the view you want to change: ")
-			fileToBeChanged = input("Full file name: ")
-			while fileToBeChanged not in files:
-				for f in files:
-					print(Fore.YELLOW + "--> " + Style.RESET_ALL + f)
-				print("Not a valid file name. Try again. Enter file name: ")
-				fileToBeChanged = input("Full file name: ")
+		print(Fore.CYAN + "Project already exists on current path." + Style.RESET_ALL +
+			"Do you want to update an existing view (1) or add a new view (2)?")
+		res = input("Enter 1 or 2: ")
+		while res not in {"1, 2"}:
+			print(Fore.RED + "You entered something invalid." + Style.RESET_ALL + " Try again.")
+			res = input("Enter 1 or 2: ")
 
-		fileToBeChanged = fileToBeChanged[:-2]
-		print(Fore.GREEN + "All good so far! " + Style.RESET_ALL + " File to be changed: " + Fore.CYAN + fileToBeChanged + Style.RESET_ALL)
+		if res == "1": # UPDATE AN EXISTING VIEW
+			print("Update a view selected...")
+
+			fileToBeChanged = selectViewFile(outputPath, debug)
+
+			print(Fore.GREEN + "All good so far! " + Style.RESET_ALL + " File to be changed: " + Fore.CYAN + fileToBeChanged + Style.RESET_ALL)
 
 
-		# Finner ID'ene i ny og gammel JSON
-		newJSON, newJSONList, newMeta = findIDJSON(args.jsonPath)
-		#print(newJSON, " test")
+			# Finner ID'ene i ny og gammel JSON
+			newJSON, newJSONList, newMeta = findIDJSON(args.jsonPath)
+			#print(newJSON, " test")
 
-		oldJSONPath = outputPath+ "/json/" + fileToBeChanged[:-4] + ".json"
-		oldJSON, oldJSONList, oldMeta = findIDJSON(oldJSONPath)
-		#print(oldJSON, " test1")
+			oldJSONPath = outputPath+ "/json/" + fileToBeChanged[:-4] + ".json"
+			oldJSON, oldJSONList, oldMeta = findIDJSON(oldJSONPath)
+			#print(oldJSON, " test1")
 
 
-		#Check for same image size and other requirements (e.g. that all project files are present...
-		if oldMeta["imageWidth"] != newMeta["imageWidth"] or oldMeta["imageHeight"] != newMeta["imageHeight"]:
-			if args.force:
-				print(Fore.RED + "Warning! " + Fore.YELLOW + "The old and new image has not the same size."
-					+"\nThis may result in some unexpected behavior and results. You added 'force' and we will continue." + Style.RESET_ALL)
-			else:
-				print(Fore.RED+"The old and new image has not same width and heigth. This is a requirement."
-					+"\nSee the documentation for more information."
-					+Fore.YELLOW+"\nIf you still want to continue, run the same command with '--force' on the end."
-					+Fore.RED+"\nExiting..."+ Style.RESET_ALL)
+			#Check for same image size and other requirements (e.g. that all project files are present...
+			if oldMeta["imageWidth"] != newMeta["imageWidth"] or oldMeta["imageHeight"] != newMeta["imageHeight"]:
+				if args.force:
+					print(Fore.RED + "Warning! " + Fore.YELLOW + "The old and new image has not the same size."
+						+"\nThis may result in some unexpected behavior and results. You added 'force' and we will continue." + Style.RESET_ALL)
+				else:
+					print(Fore.RED+"The old and new image has not same width and heigth. This is a requirement."
+						+"\nSee the documentation for more information."
+						+Fore.YELLOW+"\nIf you still want to continue, run the same command with '--force' on the end."
+						+Fore.RED+"\nExiting..."+ Style.RESET_ALL)
 
 
 
-		# Lager en liste med ID'er som er annerledes, blir flere hvis det er flere her, blir tom hvis ikke.
-		finalJSONID = []
-		for i in newJSON:
-			if(i not in oldJSON):
-				 finalJSONID.append(i)
+			# Lager en liste med ID'er som er annerledes, blir flere hvis det er flere her, blir tom hvis ikke.
+			finalJSONID = []
+			for i in newJSON:
+				if(i not in oldJSON):
+					 finalJSONID.append(i)
 
-		# Henter ut en flat struktur, så hvert JSON object kan hentes ut fra en liste, så man slipper reqursion for å hente ut.
-		newFlatJSONList = []
-		for x in newJSONList.items():
-			if x[0] != "meta":
-				readElementForNewListe(x[1][1], newFlatJSONList)
+			# Henter ut en flat struktur, så hvert JSON object kan hentes ut fra en liste, så man slipper reqursion for å hente ut.
+			newFlatJSONList = []
+			for x in newJSONList.items():
+				if x[0] != "meta":
+					readElementForNewListe(x[1][1], newFlatJSONList)
 
-		# Gjør samme med gammel JSON struktur
-		oldFlatJSONList = []
-		for y in oldJSONList.items():
-			if y[0] != "meta":
-				readElementForNewListe(y[1][1], oldFlatJSONList)
+			# Gjør samme med gammel JSON struktur
+			oldFlatJSONList = []
+			for y in oldJSONList.items():
+				if y[0] != "meta":
+					readElementForNewListe(y[1][1], oldFlatJSONList)
 
-		#Funksjon for å sjekke om vi har riktige ID'er
-		checkIfCorrectID(newFlatJSONList, oldFlatJSONList, finalJSONID)
+			#Funksjon for å sjekke om vi har riktige ID'er
+			checkIfCorrectID(newFlatJSONList, oldFlatJSONList, finalJSONID)
 
-		updatedJSON = regenerateJSON(newFlatJSONList)
+			updatedJSON = regenerateJSON(newFlatJSONList)
 
 
-		#Kopiere mal til ny dest.
-		copy("DemoApp/DemoApp/ViewControllerBase.m", outputPath + "/DemoApp/")
-		copy("DemoApp/DemoApp/ViewControllerBase.h", outputPath + "/DemoApp/")
+			#Kopiere mal til ny dest.
+			copy("DemoApp/DemoApp/ViewControllerBase.m", outputPath + "/DemoApp/")
+			copy("DemoApp/DemoApp/ViewControllerBase.h", outputPath + "/DemoApp/")
+			copy("DemoApp/DemoApp/ViewController.m", outputPath + "/DemoApp/")
+			copy("DemoApp/DemoApp/ViewController.h", outputPath + "/DemoApp/")
+			
+			iterateJSONAndGenerateCode(updatedJSON, outputPath, "ViewController", debug)
+			
+			os.remove(outputPath + "/DemoApp/" + fileToBeChanged + ".h")
+			os.remove(outputPath + "/DemoApp/" + fileToBeChanged + ".m")
+			os.remove(outputPath + "/DemoApp/" + fileToBeChanged[:-4] + ".h")
+			os.remove(outputPath + "/DemoApp/" + fileToBeChanged[:-4] + ".m")
 
-		os.remove(outputPath + "/DemoApp/" + fileToBeChanged + ".h")
-		os.remove(outputPath + "/DemoApp/" + fileToBeChanged + ".m")
+			os.rename(outputPath + "/DemoApp/ViewControllerBase.m", outputPath + "/DemoApp/" + fileToBeChanged + ".m")
+			os.rename(outputPath + "/DemoApp/ViewControllerBase.h", outputPath + "/DemoApp/" + fileToBeChanged + ".h")
+			os.rename(outputPath + "/DemoApp/ViewController.m", outputPath + "/DemoApp/" + fileToBeChanged[:-4] + ".m")
+			os.rename(outputPath + "/DemoApp/ViewController.h", outputPath + "/DemoApp/" + fileToBeChanged[:-4] + ".h")
 
-		for e in updatedJSON.items():
-			if e[0] != "meta":
-				readElement(e[1][1], newListeM, newListeH, newListeMP)
-		if debug: print("Done parsing the JSON elements")
+			writeJSONToFile(outputPath, updatedJSON, newMeta, fileToBeChanged[:-4])
 
-		replaceText(outputPath, "m", "ViewController", newListeM, newListeMP)
-		replaceText(outputPath, "h", "ViewController", newListeH, None)
+		elif res == "2": # ADD NEW VIEW TO PROJECT
+			print("Add view to existing project")
+			viewName = input("Enter a name for the new view: ")
+			
+			#Kopiere mal til ny dest.
+			copy("DemoApp/DemoApp/ViewControllerBase.m", outputPath + "/DemoApp/")
+			copy("DemoApp/DemoApp/ViewControllerBase.h", outputPath + "/DemoApp/")
+			copy("DemoApp/DemoApp/ViewController.m", outputPath + "/DemoApp/")
+			copy("DemoApp/DemoApp/ViewController.h", outputPath + "/DemoApp/")
 
-		os.rename(outputPath + "/DemoApp/ViewControllerBase.m", outputPath + "/DemoApp/" + fileToBeChanged + ".m")
-		os.rename(outputPath + "/DemoApp/ViewControllerBase.h", outputPath + "/DemoApp/" + fileToBeChanged + ".h")
+			os.rename(outputPath + "/DemoApp/ViewControllerBase.h", outputPath + "/DemoApp/" + viewName + "Base.h")
+			os.rename(outputPath + "/DemoApp/ViewControllerBase.m", outputPath + "/DemoApp/" + viewName + "Base.m")
+			os.rename(outputPath + "/DemoApp/ViewController.m", outputPath + "/DemoApp/" + viewName + ".m")
+			os.rename(outputPath + "/DemoApp/ViewController.h", outputPath + "/DemoApp/" + viewName + ".h")
+			
+			with open(args.jsonPath) as data_file:
+				data = OrderedDict()
+				try:
+					data = json.load(data_file, object_pairs_hook=OrderedDict)
+				except ValueError:
+					print(Fore.RED + "Something went wrong. Could not read JSON. Is the JSON structure correct?" + Style.RESET_ALL)
+					return
+				iterateJSONAndGenerateCode(data, outputPath, viewName, debug)
 
-		#Skrive endringene i json til fil
-		#(The [:-4]-bit removes 'Base' from the filename)
-		writeJSONToFile(outputPath, updatedJSON, newMeta, fileToBeChanged[:-4])
-		
+				writeJSONToFile(outputPath, data, data["meta"], viewName)
 
 	else: #CREATING A NEW VIEW
 
-		fromDirectory = "DemoApp"
-		copy_tree(fromDirectory, outputPath)
+		copy_tree("DemoApp", outputPath)
 		viewName = input("Enter a name for the new view: ")
 		os.rename(outputPath + "/DemoApp/ViewControllerBase.h", outputPath + "/DemoApp/" + viewName + "Base.h")
 		os.rename(outputPath + "/DemoApp/ViewControllerBase.m", outputPath + "/DemoApp/" + viewName + "Base.m")
 		os.rename(outputPath + "/DemoApp/ViewController.m", outputPath + "/DemoApp/" + viewName + ".m")
 		os.rename(outputPath + "/DemoApp/ViewController.h", outputPath + "/DemoApp/" + viewName + ".h")
+		
 		with open(args.jsonPath) as data_file:
 			data = OrderedDict()
 			try:
@@ -136,16 +148,12 @@ def copyProject(outputPath, debug, args):
 			except ValueError:
 				print(Fore.RED + "Something went wrong. Could not read JSON. Is the JSON structure correct?" + Style.RESET_ALL)
 				return
+			iterateJSONAndGenerateCode(data, outputPath, viewName, debug)
 
-		for e in data.items():
-			if e[0] != "meta":
-				readElement(e[1][1], newListeM, newListeH, newListeMP)
-		if debug: print("Done parsing the JSON elements")
+			writeJSONToFile(outputPath, data, data["meta"], viewName)
 
-		replaceText(outputPath, "m", viewName, newListeM, newListeMP)
-		replaceText(outputPath, "h", viewName, newListeH, None)
 
-		writeJSONToFile(outputPath, data, data["meta"], viewName)
+		# Det som er inni funksjonen over stod her før.
 
 	print(Fore.GREEN + "iOS generator done" + Fore.RESET)
 
@@ -187,6 +195,47 @@ def regenerateJSON(oldList):
 			nestedList[e[0]] = e
 
 	return nestedList
+
+
+def iterateJSONAndGenerateCode(data, outputPath, viewName, debug):
+	newListeM = []
+	newListeH = []
+	newListeMP = []
+
+	for e in data.items():
+		if e[0] != "meta":
+			readElement(e[1][1], newListeM, newListeH, newListeMP)
+	if debug: print("Done parsing the JSON elements")
+
+	replaceText(outputPath, "m", viewName, newListeM, newListeMP)
+	replaceText(outputPath, "h", viewName, newListeH, None)
+
+	
+
+
+def selectViewFile(outputPath, debug):
+	#Get the name of the view to be changed
+	files = [f for f in os.listdir(outputPath + "/DemoApp/") if re.match("[a-zA-Z0-9]*Base.h", f)]
+	if len(files) == 1:
+		fileToBeChanged = files[0]
+		if debug: print("Found only one view meeting the requirements: " + fileToBeChanged[:-2])
+	elif len(files) == 0:
+		print(Fore.RED + "Error! " + Fore.YELLOW + "Did not find any views matching the requirements."
+			+"\nSee the documentation for more information. Error code: xx" + Style.RESET_ALL)
+		return
+	else:
+		print(Fore.CYAN + "All editable views in project:" + Style.RESET_ALL)
+		for f in files:
+			print(Fore.YELLOW + "--> " + Style.RESET_ALL + f[:-2])
+		print("Write the name of the view you want to change: ")
+		fileToBeChanged = input("File name: ") + ".h"
+		while fileToBeChanged not in files:
+			for f in files:
+				print(Fore.YELLOW + "--> " + Style.RESET_ALL + f[:-2])
+			print("Not a valid file name. Try again. Enter file name: ")
+			fileToBeChanged = input("Full file name: ") + ".h"
+
+	return fileToBeChanged[:-2]
 
 """
 	Write the ordered list to file in a JSON structure
@@ -400,6 +449,7 @@ def readElement(element, newListeM, newListeH, newListeMP):
 
 def replaceText(templatePath, fileType, filename, elements, elements2):
 	templatePath = templatePath+"/DemoApp"
+	print(templatePath)
 	file1 = open(templatePath + "/" + filename + "Base." + fileType , "r")
 	file2 = open(templatePath + "/NewFile.txt", "w")
 
