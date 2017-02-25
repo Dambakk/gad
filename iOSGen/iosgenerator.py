@@ -14,12 +14,18 @@ from pprint import pprint
 import glob
 import time
 import subprocess
+import readline
 
 listenM = {}
 listenMP = {}
 listenH = {}
 
+OUTPUTPATH = ""
+VIEWS = []
+
 def copyProject(outputPath, debug, args):
+	global VIEWS
+	VIEWS = [f for f in os.listdir(outputPath + "/DemoApp/") if re.match("[a-zA-Z0-9]*Base.h", f)]
 	
 	configSetup()
 	if(os.path.exists(outputPath)):
@@ -28,7 +34,7 @@ def copyProject(outputPath, debug, args):
 		print(Fore.CYAN + "Project already exists on current path." + Style.RESET_ALL +
 			"Do you want to update an existing view (1) or add a new view (2)?")
 		res = input("Enter 1 or 2: ")
-		while res not in {"1, 2"}:
+		while res not in {"1", "2"}:
 			print(Fore.RED + "You entered something invalid." + Style.RESET_ALL + " Try again.")
 			res = input("Enter 1 or 2: ")
 
@@ -159,6 +165,14 @@ def copyProject(outputPath, debug, args):
 
 
 
+def completer(text, state):
+	files = [f[:-2] for f in VIEWS if f.startswith(text)]
+	if state < len(files):
+		return files[state]
+	else:
+		return None
+
+
 def regenerateJSON(oldList):
 
 	#Create a flat, ordered structure
@@ -214,6 +228,11 @@ def iterateJSONAndGenerateCode(data, outputPath, viewName, debug):
 
 
 def selectViewFile(outputPath, debug):
+	OUTPUTPATH = outputPath
+	print("OUTPUT: ", OUTPUTPATH)
+	readline.parse_and_bind("tab: complete")
+	readline.set_completer(completer)
+
 	#Get the name of the view to be changed
 	files = [f for f in os.listdir(outputPath + "/DemoApp/") if re.match("[a-zA-Z0-9]*Base.h", f)]
 	if len(files) == 1:
@@ -232,7 +251,7 @@ def selectViewFile(outputPath, debug):
 		while fileToBeChanged not in files:
 			for f in files:
 				print(Fore.YELLOW + "--> " + Style.RESET_ALL + f[:-2])
-			print("Not a valid file name. Try again. Enter file name: ")
+			print(Fore.RED + "Not a valid file name. "+ Style.RESET_ALL + "Try again. Enter file name: ")
 			fileToBeChanged = input("Full file name: ") + ".h"
 
 	return fileToBeChanged[:-2]
