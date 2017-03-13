@@ -9,10 +9,10 @@ risk.
 
 #import <UIKit/UIKit.h>
 
-@interface ViewControllerBase : UIViewController
+@interface {{viewname}} : UIViewController
 
 
-{{[]}}
+{{content}}
 
 /*
 @property(nonatomic, strong) UIView *view1;

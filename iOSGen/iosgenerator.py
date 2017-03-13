@@ -28,9 +28,9 @@ def copyProject(outputPath, debug, args):
 		print(Fore.CYAN + "Project already exists on current path." + Style.RESET_ALL +
 			"Do you want to update an existing view (1) or add a new view (2)?")
 		res = input("Enter 1 or 2: ")
-		while res not in {"1, 2"}:
-			print(Fore.RED + "You entered something invalid." + Style.RESET_ALL + " Try again.")
-			res = input("Enter 1 or 2: ")
+#		while res not in {"1, 2"}:
+#			print(Fore.RED + "You entered something invalid." + Style.RESET_ALL + " Try again.")
+#			res = input("Enter 1 or 2: ")
 
 		if res == "1": # UPDATE AN EXISTING VIEW
 			print("Update a view selected...")
@@ -104,6 +104,9 @@ def copyProject(outputPath, debug, args):
 			os.rename(outputPath + "/DemoApp/ViewController.m", outputPath + "/DemoApp/" + fileToBeChanged[:-4] + ".m")
 			os.rename(outputPath + "/DemoApp/ViewController.h", outputPath + "/DemoApp/" + fileToBeChanged[:-4] + ".h")
 
+			prepareFiles(outputPath, fileToBeChanged[:-4], "m")
+			prepareFiles(outputPath, fileToBeChanged[:-4], "h")
+
 			writeJSONToFile(outputPath, updatedJSON, newMeta, fileToBeChanged[:-4])
 
 		elif res == "2": # ADD NEW VIEW TO PROJECT
@@ -120,6 +123,9 @@ def copyProject(outputPath, debug, args):
 			os.rename(outputPath + "/DemoApp/ViewControllerBase.m", outputPath + "/DemoApp/" + viewName + "Base.m")
 			os.rename(outputPath + "/DemoApp/ViewController.m", outputPath + "/DemoApp/" + viewName + ".m")
 			os.rename(outputPath + "/DemoApp/ViewController.h", outputPath + "/DemoApp/" + viewName + ".h")
+
+			prepareFiles(outputPath, viewName, "m")
+			prepareFiles(outputPath, viewName, "h")
 			
 			with open(args.jsonPath) as data_file:
 				data = OrderedDict()
@@ -140,6 +146,9 @@ def copyProject(outputPath, debug, args):
 		os.rename(outputPath + "/DemoApp/ViewControllerBase.m", outputPath + "/DemoApp/" + viewName + "Base.m")
 		os.rename(outputPath + "/DemoApp/ViewController.m", outputPath + "/DemoApp/" + viewName + ".m")
 		os.rename(outputPath + "/DemoApp/ViewController.h", outputPath + "/DemoApp/" + viewName + ".h")
+
+		prepareFiles(outputPath, viewName, "m")
+		prepareFiles(outputPath, viewName, "h")
 		
 		with open(args.jsonPath) as data_file:
 			data = OrderedDict()
@@ -447,6 +456,31 @@ def readElement(element, newListeM, newListeH, newListeMP):
 			readElement(contentStructure[str(i)][1], newListeM, newListeH, newListeMP)
 
 
+def prepareFiles(outputPath, filename, fileType):
+	outputPath = outputPath + "/DemoApp"
+	file1 = open(outputPath + "/" + filename + "." + fileType , "r")
+	fileTemp1 = open(outputPath + "/temp.txt", "w")
+
+	for line in file1:
+		if re.search('\{\{viewname\}\}', line):
+			fileTemp1.write(re.sub('\{\{viewname\}\}', filename, line))
+		else :
+			fileTemp1.write(line)
+	file1.close()
+	fileTemp1.close()
+
+	file2 = open(outputPath + "/" + filename + "." + fileType , "w")
+	fileTemp2 = open(outputPath + "/temp.txt", "r")
+
+	for line in fileTemp2: 
+		file2.write(line)
+
+	file2.close()
+	fileTemp2.close()
+	os.remove(outputPath + "/temp.txt")
+
+
+
 def replaceText(templatePath, fileType, filename, elements, elements2):
 	templatePath = templatePath+"/DemoApp"
 	print(templatePath)
@@ -455,8 +489,9 @@ def replaceText(templatePath, fileType, filename, elements, elements2):
 
 
 	for line in file1:
-		matchObj = re.match('\{\{\[\]\}\}', line)
-		if(matchObj):
+		insertNameHere = re.search('\{\{viewname\}\}', line)
+		content = re.match('\{\{content\}\}', line)
+		if(content):
 			file2.write("/* Declearing elements */\n")
 			for i in elements:
 				file2.write(i + "\n")
@@ -465,6 +500,8 @@ def replaceText(templatePath, fileType, filename, elements, elements2):
 				file2.write("/* Adding elements */\n")
 				for j in elements2:
 					file2.write(j + "\n")
+		elif (insertNameHere):
+			file2.write(re.sub('\{\{viewname\}\}', filename+"Base", line))
 		else:
 			file2.write(line)
 	file1.close()
