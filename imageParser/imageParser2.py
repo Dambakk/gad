@@ -25,9 +25,7 @@ def parseImage(path, outputPath, debug):
 	if debug :
 		print("Done reading image")
 
-
-	print(CompleteRGBDict)
-	internalList = createJSONObjects(CompleteRGBDict, outputPath, debug)
+	internalList = createJSONObjects(CompleteRGBDict, outputPath,image ,debug )
 
 	unorderedList = findZValues(internalList)
 
@@ -160,7 +158,7 @@ def ConvertToHex(rgbColor):
 	return hexValue
 
 
-def createJSONObjects(CompleteRGBDict, outputPath, debug=False):
+def createJSONObjects(CompleteRGBDict, outputPath, image,debug=False):
 	objects = []
 	ListToSaveJSONObjects = []
 	listToFindZValues = []
@@ -172,7 +170,7 @@ def createJSONObjects(CompleteRGBDict, outputPath, debug=False):
 		num = CompleteRGBDict.popitem()
 		rgbColor = num[0]
 		num2 = num[1]
-		findTheSquares(num2, squaresList)
+		findTheSquares(num2, squaresList, rgbColor, image)
 		objects.append([rgbColor, squaresList])
 
 	while(len(objects) != 0):
@@ -302,59 +300,66 @@ def writeToFile(outputPath, completeList, image):
 
 
 """
-	Finds the four corners of the given box.
+	Goes through all the elements in the different colors
 """
-def findTheSquares(corners, squaresList):
-	while len(corners) != 0:
-		firstCorner = corners[0]
+def findTheSquares(corners, squaresList, rgbColor, image):
+    while len(corners) != 0:
+        firstCorner = corners[0]
 
-		'''corners.pop(0)
-		corners.pop(0)'''
-
-		for i in range(len(corners-2)):
-			secondCorner = corners[i+1]
-
-			value1, value2 = findEndCorners(corners, firstCorner, secondCorner)
-
-			if(value1 != -1 and value2 != -1):
-				thirdCorner = corners[value1]
-				fourthCorner = corners[value2]
-
-				del corners[firstCorner:secondCorner]
-				del corners[value1:value2+1]
-
-				squaresList.append([firstCorner,secondCorner, thirdCorner, fourthCorner])
+        minX, minY, maxX, maxY = findMaximumAndMinimumValues(corners, firstCorner, rgbColor, image)
+        corners.pop(0)
+        squaresList.append([[minY, minX], [minY, maxX], [maxY, minX], [maxY, maxX]])
 
 """
-	Helper function to find the end corners
+	Helper function to find the corners
+    Searches around the box to find the correct maximum and minimum values
+    returns the max and minimum x and y values
 """
 
-def findEndCorners(corners, firstCorner, secondCorner):
-	firstValue = -1
-	secondValue = -1
-	number = 0
 
-	for i in range(len(corners)-1):
-		if(corners[i][1] == firstCorner[1] and corners[i+1][1] == secondCorner[1]):
-			firstValue = number
-			secondValue = number+1
-		number += 1
+def findMaximumAndMinimumValues(corners, firstCorner, rgbColor, image):
+    a,b,c = rgbColor
+    rgbColor = a,b,c,255
 
+    xValue = -1
+    yValue = -1
+    minX = firstCorner[1]
+    minY = firstCorner[0]
+    maxX = firstCorner[1]
+    maxY = firstCorner[0]
 
+    testValue = [xValue, yValue]
 
+    if(image.getpixel((firstCorner[1]+1, firstCorner[0])) == rgbColor and image.getpixel((firstCorner[1]+1, firstCorner[0]-1)) != rgbColor):
+        xValue = firstCorner[1]+1
+        yValue = firstCorner[0]
 
-	"""
-	for i in corners:
-		if(i[1] == firstCorner[1]):
-			firstValue = number
-		if(i[1] == secondCorner[1]):
-			secondValue = number
-			break
-		number += 1
-	"""
+    while(xValue != firstCorner[1] or yValue != firstCorner[0]):
 
-	return (firstValue,secondValue)
+        testValue = [yValue, xValue]
+        for value in corners:
+            if(testValue == value):
+                corners.remove(value)
 
+        if((image.getpixel((xValue+1, yValue)) == rgbColor and image.getpixel((xValue+1, yValue-1)) != rgbColor) or (image.getpixel((xValue+1, yValue+1)) == rgbColor and image.getpixel((xValue+1, yValue)) != rgbColor)):
+            xValue = xValue+1
+            if(xValue > maxX):
+                maxX = xValue
+
+        elif((image.getpixel((xValue-1, yValue)) == rgbColor and image.getpixel((xValue, yValue+1)) != rgbColor) or image.getpixel((xValue-1, yValue-1)) == rgbColor and image.getpixel((xValue-1, yValue)) != rgbColor):
+            xValue = xValue-1
+            if(xValue < minX):
+                minX = xValue
+
+        elif(image.getpixel((xValue, yValue+1)) == rgbColor and image.getpixel((xValue+1, yValue+1)) != rgbColor):
+            yValue = yValue+1
+            if(yValue > maxY):
+                maxY = yValue
+
+        elif((image.getpixel((xValue, yValue-1)) == rgbColor and image.getpixel((xValue-1, yValue-1)) != rgbColor) or (image.getpixel((xValue+1, yValue-1)) == rgbColor and image.getpixel((xValue, yValue-1)) != rgbColor)):
+            yValue = yValue-1
+
+    return minX, minY, maxX, maxY
 
 
 
