@@ -9,6 +9,9 @@ import collections
 from collections import OrderedDict
 import time
 
+from operator import itemgetter
+
+
 """
 	Main parser function
 """
@@ -222,8 +225,11 @@ def fixNesting(elementsOrdered):
 
 """
 	Finds Z values on the elements found in the picture
+	lambda to sort the list on the lowest x and y values - does the trick when checking for parents
 """
 def findZValues(listToFindZValues):
+
+	listToFindZValues.sort(key = lambda element: element[1])
 
 	for i in range(len(listToFindZValues)):
 		zNumber = 0
@@ -243,10 +249,12 @@ def findZValues(listToFindZValues):
 				checkObject3 = checkObject[3]
 				checkObject4 = checkObject[4]
 
+
 				if(tempOject1[1] >= checkObject1[1] and tempOject1[0] >= checkObject1[0] and tempOject2[1] <= checkObject2[1] and tempOject2[0] >= checkObject2[0] and tempOject3[1] >= checkObject3[1] and tempOject3[0] <= checkObject3[0] and tempOject4[1] <= checkObject4[1] and tempOject4[0] <= checkObject4[0]):
 					parent = checkObject[5]
 
 		tempOject.append(parent)
+
 
 	return listToFindZValues
 
@@ -303,63 +311,63 @@ def writeToFile(outputPath, completeList, image):
 	Goes through all the elements in the different colors
 """
 def findTheSquares(corners, squaresList, rgbColor, image):
-    while len(corners) != 0:
-        firstCorner = corners[0]
+	while len(corners) != 0:
+		firstCorner = corners[0]
 
-        minX, minY, maxX, maxY = findMaximumAndMinimumValues(corners, firstCorner, rgbColor, image)
-        corners.pop(0)
-        squaresList.append([[minY, minX], [minY, maxX], [maxY, minX], [maxY, maxX]])
+		minX, minY, maxX, maxY = findMaximumAndMinimumValues(corners, firstCorner, rgbColor, image)
+		corners.pop(0)
+		squaresList.append([[minY, minX], [minY, maxX], [maxY, minX], [maxY, maxX]])
 
 """
 	Helper function to find the corners
-    Searches around the box to find the correct maximum and minimum values
-    returns the max and minimum x and y values
+	Searches around the box to find the correct maximum and minimum values
+	returns the max and minimum x and y values
 """
 
 
 def findMaximumAndMinimumValues(corners, firstCorner, rgbColor, image):
-    a,b,c = rgbColor
-    rgbColor = a,b,c,255
+	a,b,c = rgbColor
+	rgbColor = a,b,c,255
 
-    xValue = -1
-    yValue = -1
-    minX = firstCorner[1]
-    minY = firstCorner[0]
-    maxX = firstCorner[1]
-    maxY = firstCorner[0]
+	xValue = -1
+	yValue = -1
+	minX = firstCorner[1]
+	minY = firstCorner[0]
+	maxX = firstCorner[1]
+	maxY = firstCorner[0]
 
-    testValue = [xValue, yValue]
+	testValue = [xValue, yValue]
 
-    if(image.getpixel((firstCorner[1]+1, firstCorner[0])) == rgbColor and image.getpixel((firstCorner[1]+1, firstCorner[0]-1)) != rgbColor):
-        xValue = firstCorner[1]+1
-        yValue = firstCorner[0]
+	if(image.getpixel((firstCorner[1]+1, firstCorner[0])) == rgbColor and image.getpixel((firstCorner[1]+1, firstCorner[0]-1)) != rgbColor):
+		xValue = firstCorner[1]+1
+		yValue = firstCorner[0]
 
-    while(xValue != firstCorner[1] or yValue != firstCorner[0]):
+	while(xValue != firstCorner[1] or yValue != firstCorner[0]):
 
-        testValue = [yValue, xValue]
-        for value in corners:
-            if(testValue == value):
-                corners.remove(value)
+		testValue = [yValue, xValue]
+		for value in corners:
+			if(testValue == value):
+				corners.remove(value)
 
-        if((image.getpixel((xValue+1, yValue)) == rgbColor and image.getpixel((xValue+1, yValue-1)) != rgbColor) or (image.getpixel((xValue+1, yValue+1)) == rgbColor and image.getpixel((xValue+1, yValue)) != rgbColor)):
-            xValue = xValue+1
-            if(xValue > maxX):
-                maxX = xValue
+		if((image.getpixel((xValue+1, yValue)) == rgbColor and image.getpixel((xValue+1, yValue-1)) != rgbColor) or (image.getpixel((xValue+1, yValue+1)) == rgbColor and image.getpixel((xValue+1, yValue)) != rgbColor)):
+			xValue = xValue+1
+			if(xValue > maxX):
+				maxX = xValue
 
-        elif((image.getpixel((xValue-1, yValue)) == rgbColor and image.getpixel((xValue, yValue+1)) != rgbColor) or image.getpixel((xValue-1, yValue-1)) == rgbColor and image.getpixel((xValue-1, yValue)) != rgbColor):
-            xValue = xValue-1
-            if(xValue < minX):
-                minX = xValue
+		elif((image.getpixel((xValue-1, yValue)) == rgbColor and image.getpixel((xValue, yValue+1)) != rgbColor) or image.getpixel((xValue-1, yValue-1)) == rgbColor and image.getpixel((xValue-1, yValue)) != rgbColor):
+			xValue = xValue-1
+			if(xValue < minX):
+				minX = xValue
 
-        elif(image.getpixel((xValue, yValue+1)) == rgbColor and image.getpixel((xValue+1, yValue+1)) != rgbColor):
-            yValue = yValue+1
-            if(yValue > maxY):
-                maxY = yValue
+		elif(image.getpixel((xValue, yValue+1)) == rgbColor and image.getpixel((xValue+1, yValue+1)) != rgbColor):
+			yValue = yValue+1
+			if(yValue > maxY):
+				maxY = yValue
 
-        elif((image.getpixel((xValue, yValue-1)) == rgbColor and image.getpixel((xValue-1, yValue-1)) != rgbColor) or (image.getpixel((xValue+1, yValue-1)) == rgbColor and image.getpixel((xValue, yValue-1)) != rgbColor)):
-            yValue = yValue-1
+		elif((image.getpixel((xValue, yValue-1)) == rgbColor and image.getpixel((xValue-1, yValue-1)) != rgbColor) or (image.getpixel((xValue+1, yValue-1)) == rgbColor and image.getpixel((xValue, yValue-1)) != rgbColor)):
+			yValue = yValue-1
 
-    return minX, minY, maxX, maxY
+	return minX, minY, maxX, maxY
 
 
 
