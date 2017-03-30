@@ -7,6 +7,18 @@ risk.
 
  */
 
+#import "{{viewname}}.h"
+
+@interface {{viewname}} ()
+
+@end
+
+@implementation {{viewname}}
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+
+/*
 #import "ViewControllerBase.h"
 
 @interface ViewControllerBase ()
@@ -14,13 +26,9 @@ risk.
 @end
 
 @implementation ViewControllerBase
+*/
 
-- (void)viewDidLoad {
-    [super viewDidLoad];
-
-
-
-{{[]}}
+{{content}}
 
     /*
     self.view.backgroundColor = [UIColor colorWithRed:1 green:1 blue:1 alpha:1];
