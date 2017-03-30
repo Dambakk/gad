@@ -25,10 +25,10 @@ VIEWS = []
 
 def copyProject(outputPath, debug, args):
 	global VIEWS
-	VIEWS = [f for f in os.listdir(outputPath + "/DemoApp/") if re.match("[a-zA-Z0-9]*Base.h", f)]
 	
 	configSetup()
 	if(os.path.exists(outputPath)):
+		VIEWS = [f for f in os.listdir(outputPath + "/DemoApp/") if re.match("[a-zA-Z0-9]*Base.h", f)]
 		#Check that all project files exists.
 
 		print(Fore.CYAN + "Project already exists on current path." + Style.RESET_ALL +
