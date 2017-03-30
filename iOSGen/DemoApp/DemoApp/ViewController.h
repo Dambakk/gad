@@ -1,7 +1,7 @@
 
 
-#import "{{viewname}}Base.h"
+#import "ViewControllerBase.h"
 
-@interface {{viewname}} : {{viewname}}Base
+@interface ViewController : ViewControllerBase
 
 @end
