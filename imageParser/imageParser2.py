@@ -32,7 +32,7 @@ def parseImage(path, outputPath, debug):
 
 	unorderedList = findZValues(internalList)
 
-	completeListOrdered = createOrderedJSONStructure(unorderedList)
+	completeListOrdered = createOrderedJSONStructure(unorderedList, debug)
 
 	nestedList = fixNesting(completeListOrdered)
 
@@ -229,7 +229,7 @@ def fixNesting(elementsOrdered):
 """
 def findZValues(listToFindZValues):
 
-	listToFindZValues.sort(key = lambda element: element[1])
+	listToFindZValues.sort(key = lambda element: (element[1], -element[2][1]))
 
 	for i in range(len(listToFindZValues)):
 		zNumber = 0
@@ -263,8 +263,9 @@ def findZValues(listToFindZValues):
 """
 	Takes an unordered list and creates an ordered list and returns this new list
 """
-def createOrderedJSONStructure(unorderedList):
+def createOrderedJSONStructure(unorderedList, debug):
 	completeListOrdered = OrderedDict()
+	if debug: print(Fore.YELLOW+"Found following elements:"+Style.RESET_ALL)
 	for element in unorderedList:
 		data2 = OrderedDict()
 		data2['id'] = int(element[5])
@@ -281,6 +282,8 @@ def createOrderedJSONStructure(unorderedList):
 		data2["content"] = OrderedDict()
 
 		completeListOrdered[element[5]] = data2
+		if debug: print('	element id:', data2['id'], '		(x,y): (', data2['x'], ',' ,data2['y'], ') 	(w,h): (', data2['width'], ',', data2['height'], ')	 color: ', data2['color'] )
+
 
 	return completeListOrdered
 
