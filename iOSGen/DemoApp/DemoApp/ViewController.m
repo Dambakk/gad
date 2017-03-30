@@ -1,6 +1,5 @@
-/*
 
-Original:
+
 #import "ViewController.h"
 
 @interface ViewController ()
@@ -8,16 +7,6 @@ Original:
 @end
 
 @implementation ViewController
-
-*/
-
-#import "{{viewname}}.h"
-
-@interface {{viewname}} ()
-
-@end
-
-@implementation {{viewname}}
 
 - (void)viewDidLoad {
     [super viewDidLoad];
