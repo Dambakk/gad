@@ -212,6 +212,12 @@ def fixNesting(elementsOrdered):
 		if parent is not -1: #if not root element, move ref to content of parent
 			size = len(elementsOrdered[str(parent)]["content"])
 			e[1]['parentColor'] = elementsOrdered[str(parent)]["color"]
+
+			#Add relative coordinates:
+			e[1]["x"] = e[1]["x"] - elementsOrdered[str(parent)]["x"]
+			e[1]["y"] = e[1]["y"] - elementsOrdered[str(parent)]["y"]
+
+			#Add element as child/content of parent:
 			elementsOrdered[str(parent)]["content"][size] = e
 
 	#Move root elemets with nested elements to own list
