@@ -9,6 +9,8 @@ import configparser
 cssClasses = []
 colorTypes = {}
 
+htmlElements = {}
+
 def parseJson(jsonPath, title, outputPath, debug):
 	if debug: print("Running json parser...")
 
@@ -67,6 +69,14 @@ def readConfigFile(config):
 	for option in options:
 		colorTypes["#" + option] = config.get("color", option)
 
+	options2 = config.options("html-elements")
+	for option in options2:
+		htmlElements["#" + option] = config.get("html-elements", option)
+
+	print(options2)
+	for e in options2:
+		print(htmlElements["#" +e])
+
 
 def generateCSS():
 	css = ""
@@ -94,6 +104,15 @@ def readElement(element):
 				
 	tekst = "<{0} class='{0}-{5}-{6}' width='{2}' height='{3}'>{4}</{0}>\n".format(tag, color, width, height, innerHTML, posX, posY)
 	
+	tekst2 = htmlElements[color]
+	if "WIDTH" in tekst2:
+		tekst2 = str(tekst2).replace("WIDTH", str(width))
+	if "HEIGHT" in tekst2:
+		tekst2 = str(tekst2).replace("HEIGHT", str(height))
+	if "CONTENT" in tekst2:
+		tekst2 = str(tekst2).replace("CONTENT", str(innerHTML))
+	print("Tekst2: ", tekst2)
+
 	# check if css class entry already exists and if not, add it to the list.
 	if not (tag, color, posX, posY) in cssClasses:
 		cssClasses.append((tag, color, posX, posY))
