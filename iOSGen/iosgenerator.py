@@ -25,14 +25,14 @@ VIEWS = []
 
 def copyProject(outputPath, debug, args):
 	global VIEWS
-	
+
 	configSetup()
 	if(os.path.exists(outputPath)):
-		VIEWS = [f for f in os.listdir(outputPath + "/DemoApp/") if re.match("[a-zA-Z0-9]*Base.h", f)]
+		VIEWS = [f for f in os.listdir(outputPath + "/" + outputPath + "/") if re.match("[a-zA-Z0-9]*Base.h", f)]
 		#Check that all project files exists.
 
 		print(Fore.CYAN + "Project already exists on current path." + Style.RESET_ALL +
-			"Do you want to update an existing view (1) or add a new view (2)?")
+			"\nDo you want to update an existing view (1) or add a new view (2)?")
 		res = input("Enter 1 or 2: ")
 		while res not in {"1", "2"}:
 			print(Fore.RED + "You entered something invalid." + Style.RESET_ALL + " Try again.")
@@ -93,22 +93,22 @@ def copyProject(outputPath, debug, args):
 
 
 			#Kopiere mal til ny dest.
-			copy("DemoApp/DemoApp/ViewControllerBase.m", outputPath + "/DemoApp/")
-			copy("DemoApp/DemoApp/ViewControllerBase.h", outputPath + "/DemoApp/")
-			copy("DemoApp/DemoApp/ViewController.m", outputPath + "/DemoApp/")
-			copy("DemoApp/DemoApp/ViewController.h", outputPath + "/DemoApp/")
+			copy("DemoApp/DemoApp/ViewControllerBase.m", outputPath + "/" + outputPath + "/")
+			copy("DemoApp/DemoApp/ViewControllerBase.h", outputPath + "/" + outputPath + "/")
+			copy("DemoApp/DemoApp/ViewController.m", outputPath + "/" + outputPath + "/")
+			copy("DemoApp/DemoApp/ViewController.h", outputPath + "/" + outputPath + "/")
 			
 			iterateJSONAndGenerateCode(updatedJSON, outputPath, "ViewController", debug)
 			
-			os.remove(outputPath + "/DemoApp/" + fileToBeChanged + ".h")
-			os.remove(outputPath + "/DemoApp/" + fileToBeChanged + ".m")
-			os.remove(outputPath + "/DemoApp/" + fileToBeChanged[:-4] + ".h")
-			os.remove(outputPath + "/DemoApp/" + fileToBeChanged[:-4] + ".m")
+			os.remove(outputPath + "/" + outputPath + "/" + fileToBeChanged + ".h")
+			os.remove(outputPath + "/" + outputPath + "/" + fileToBeChanged + ".m")
+			os.remove(outputPath + "/" + outputPath + "/" + fileToBeChanged[:-4] + ".h")
+			os.remove(outputPath + "/" + outputPath + "/" + fileToBeChanged[:-4] + ".m")
 
-			os.rename(outputPath + "/DemoApp/ViewControllerBase.m", outputPath + "/DemoApp/" + fileToBeChanged + ".m")
-			os.rename(outputPath + "/DemoApp/ViewControllerBase.h", outputPath + "/DemoApp/" + fileToBeChanged + ".h")
-			os.rename(outputPath + "/DemoApp/ViewController.m", outputPath + "/DemoApp/" + fileToBeChanged[:-4] + ".m")
-			os.rename(outputPath + "/DemoApp/ViewController.h", outputPath + "/DemoApp/" + fileToBeChanged[:-4] + ".h")
+			os.rename(outputPath + "/" + outputPath + "/ViewControllerBase.m", outputPath + "/" + outputPath + "/" + fileToBeChanged + ".m")
+			os.rename(outputPath + "/" + outputPath + "/ViewControllerBase.h", outputPath + "/" + outputPath + "/" + fileToBeChanged + ".h")
+			os.rename(outputPath + "/" + outputPath + "/ViewController.m", outputPath + "/" + outputPath + "/" + fileToBeChanged[:-4] + ".m")
+			os.rename(outputPath + "/" + outputPath + "/ViewController.h", outputPath + "/" + outputPath + "/" + fileToBeChanged[:-4] + ".h")
 
 			prepareFiles(outputPath, fileToBeChanged[:-4], "m")
 			prepareFiles(outputPath, fileToBeChanged[:-4], "h")
@@ -120,15 +120,15 @@ def copyProject(outputPath, debug, args):
 			viewName = input("Enter a name for the new view: ")
 			
 			#Kopiere mal til ny dest.
-			copy("DemoApp/DemoApp/ViewControllerBase.m", outputPath + "/DemoApp/")
-			copy("DemoApp/DemoApp/ViewControllerBase.h", outputPath + "/DemoApp/")
-			copy("DemoApp/DemoApp/ViewController.m", outputPath + "/DemoApp/")
-			copy("DemoApp/DemoApp/ViewController.h", outputPath + "/DemoApp/")
+			copy("DemoApp/DemoApp/ViewControllerBase.m", outputPath + "/" + outputPath + "/")
+			copy("DemoApp/DemoApp/ViewControllerBase.h", outputPath + "/" + outputPath + "/")
+			copy("DemoApp/DemoApp/ViewController.m", outputPath + "/" + outputPath + "/")
+			copy("DemoApp/DemoApp/ViewController.h", outputPath + "/" + outputPath + "/")
 
-			os.rename(outputPath + "/DemoApp/ViewControllerBase.h", outputPath + "/DemoApp/" + viewName + "Base.h")
-			os.rename(outputPath + "/DemoApp/ViewControllerBase.m", outputPath + "/DemoApp/" + viewName + "Base.m")
-			os.rename(outputPath + "/DemoApp/ViewController.m", outputPath + "/DemoApp/" + viewName + ".m")
-			os.rename(outputPath + "/DemoApp/ViewController.h", outputPath + "/DemoApp/" + viewName + ".h")
+			os.rename(outputPath + "/" + outputPath + "/ViewControllerBase.h", outputPath + "/" + outputPath + "/" + viewName + "Base.h")
+			os.rename(outputPath + "/" + outputPath + "/ViewControllerBase.m", outputPath + "/" + outputPath + "/" + viewName + "Base.m")
+			os.rename(outputPath + "/" + outputPath + "/ViewController.m", outputPath + "/" + outputPath + "/" + viewName + ".m")
+			os.rename(outputPath + "/" + outputPath + "/ViewController.h", outputPath + "/" + outputPath + "/" + viewName + ".h")
 
 			prepareFiles(outputPath, viewName, "m")
 			prepareFiles(outputPath, viewName, "h")
@@ -144,14 +144,17 @@ def copyProject(outputPath, debug, args):
 
 				writeJSONToFile(outputPath, data, data["meta"], viewName)
 
-	else: #CREATING A NEW VIEW
+	else: #CREATING A NEW APP
 
 		copy_tree("DemoApp", outputPath)
 		viewName = input("Enter a name for the new view: ")
-		os.rename(outputPath + "/DemoApp/ViewControllerBase.h", outputPath + "/DemoApp/" + viewName + "Base.h")
-		os.rename(outputPath + "/DemoApp/ViewControllerBase.m", outputPath + "/DemoApp/" + viewName + "Base.m")
-		os.rename(outputPath + "/DemoApp/ViewController.m", outputPath + "/DemoApp/" + viewName + ".m")
-		os.rename(outputPath + "/DemoApp/ViewController.h", outputPath + "/DemoApp/" + viewName + ".h")
+		searchReplaceInAllFoldersAndFiles(outputPath, "DemoApp", outputPath, (".txt", ".pbxproj", "DemoAppTests.m", "DemoAppUITests.m", "contents.xcworkspacedata"))
+	
+		renameFilesAndFolders(outputPath, "DemoApp", outputPath)
+		os.rename(outputPath + "/" + outputPath + "/ViewControllerBase.h", outputPath + "/" + outputPath + "/" + viewName + "Base.h")
+		os.rename(outputPath + "/" + outputPath + "/ViewControllerBase.m", outputPath + "/" + outputPath + "/" + viewName + "Base.m")
+		os.rename(outputPath + "/" + outputPath + "/ViewController.m", outputPath + "/" + outputPath + "/" + viewName + ".m")
+		os.rename(outputPath + "/" + outputPath + "/ViewController.h", outputPath + "/" + outputPath + "/" + viewName + ".h")
 
 		prepareFiles(outputPath, viewName, "m")
 		prepareFiles(outputPath, viewName, "h")
@@ -168,7 +171,12 @@ def copyProject(outputPath, debug, args):
 			writeJSONToFile(outputPath, data, data["meta"], viewName)
 
 
-		# Det som er inni funksjonen over stod her før.
+
+	#På utsiden av den store if'en. Her er "Felles"-delen
+	#newName = input("Enter app name:")
+	searchReplaceInAllFoldersAndFiles(outputPath, "DemoApp", outputPath, (".txt", ".pbxproj", "DemoAppTests.m", "DemoAppUITests.m", "contents.xcworkspacedata"))
+	
+	renameFilesAndFolders(outputPath, "DemoApp", outputPath)
 
 	print(Fore.GREEN + "iOS generator done" + Fore.RESET)
 
@@ -233,17 +241,56 @@ def iterateJSONAndGenerateCode(data, outputPath, viewName, debug):
 	replaceText(outputPath, "m", viewName, newListeM, newListeMP)
 	replaceText(outputPath, "h", viewName, newListeH, None)
 
-	
+
+"""
+	Iterate all files in given directory and all subdirectories and
+	searches and replaces the searchterm in all files that matches
+	the file pattern.
+"""
+def searchReplaceInAllFoldersAndFiles(root, find, replace, FilePattern):
+	#print("Files to be changed:")
+	for path, dirs, files in os.walk(os.path.abspath(root)):
+		for filename in files:
+			if filename.endswith(FilePattern):
+				filepath = os.path.join(path, filename)
+				#print(filepath)
+				with open(filepath) as f:
+					s = f.read()
+				s = s.replace(find, replace)
+				with open(filepath, "w") as f:
+					f.write(s)	
+
+
+"""
+	Start in a root folder and change the name of all files and
+	subdirectories.
+"""
+def renameFilesAndFolders(root, find, replace):
+	for path, dirs, files in os.walk(os.path.abspath(root)):
+		#print()
+		#print("Files:")
+		for filename in files:
+			filenameNew = filename.replace(find, replace)
+			if filenameNew != filename:
+				#print(filename + " --> " + filenameNew)
+				os.rename(os.path.join(path, filename), os.path.join(path, filenameNew))
+		#print()		
+		#print("Dirs:")
+		for dirNr in range(len(dirs)):
+			dirNew = dirs[dirNr].replace(find, replace)
+			if dirNew is not dirs[dirNr]:
+				os.rename(os.path.join(path, dirs[dirNr]), os.path.join(path, dirNew))
+				dirs[dirNr] = dirNew #Update the dir name in the original list
+				#print(dirs[dirNr] + " ---> " + dirNew)
+				
 
 
 def selectViewFile(outputPath, debug):
-	OUTPUTPATH = outputPath
-	print("OUTPUT: ", OUTPUTPATH)
 	readline.parse_and_bind("tab: complete")
 	readline.set_completer(completer)
 
 	#Get the name of the view to be changed
-	files = [f for f in os.listdir(outputPath + "/DemoApp/") if re.match("[a-zA-Z0-9]*Base.h", f)]
+	files = [f for f in os.listdir(outputPath + "/" + outputPath + "/") if re.match("[a-zA-Z0-9]*Base.h", f)]
 	if len(files) == 1:
 		fileToBeChanged = files[0]
 		if debug: print("Found only one view meeting the requirements: " + fileToBeChanged[:-2])
@@ -476,10 +523,9 @@ def readElement(element, newListeM, newListeH, newListeMP):
 
 
 def prepareFiles(outputPath, filename, fileType):
-	outputPath = outputPath + "/DemoApp"
+	outputPath = outputPath + "/" + outputPath
 	file1 = open(outputPath + "/" + filename + "." + fileType , "r")
 	fileTemp1 = open(outputPath + "/temp.txt", "w")
-
 	for line in file1:
 		if re.search('\{\{viewname\}\}', line):
 			fileTemp1.write(re.sub('\{\{viewname\}\}', filename, line))
@@ -501,8 +547,7 @@ def prepareFiles(outputPath, filename, fileType):
 
 
 def replaceText(templatePath, fileType, filename, elements, elements2):
-	templatePath = templatePath+"/DemoApp"
-	print(templatePath)
+	templatePath = templatePath+"/" + templatePath
 	file1 = open(templatePath + "/" + filename + "Base." + fileType , "r")
 	file2 = open(templatePath + "/NewFile.txt", "w")
 
