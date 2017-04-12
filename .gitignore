@@ -1,8 +1,10 @@
 # Ignore the following file types
 *.txt
+!*html_template.txt
 *.DS_Store
 *.png
 __pycache__
 Output
 */output*
 */Output*
+*TEST*
