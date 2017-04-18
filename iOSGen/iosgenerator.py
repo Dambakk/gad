@@ -199,14 +199,16 @@ def copyProject(outputPath, debug, args, appName):
 			git.init()
 			if debug: print("Initialized git repository")
 		viewName = input("Enter a name for the new view: ")
-		#searchReplaceInAllFoldersAndFiles(outputPath, "DemoApp", outputPath, (".txt", ".pbxproj", "DemoAppTests.m", "DemoAppUITests.m", "contents.xcworkspacedata"))
-	
+		
+		searchReplaceInAllFoldersAndFiles(outputPath, "DemoApp", appName, (".txt", ".pbxproj", "DemoAppTests.m", "DemoAppUITests.m", "contents.xcworkspacedata"))
 		renameFilesAndFolders(outputPath, "DemoApp", outputPath, appName)
 		
 		os.rename(outputPath + "/" + appName + "/ViewControllerBase.h", outputPath + "/" + appName + "/" + viewName + "Base.h")
 		os.rename(outputPath + "/" + appName + "/ViewControllerBase.m", outputPath + "/" + appName + "/" + viewName + "Base.m")
 		os.rename(outputPath + "/" + appName + "/ViewController.m", outputPath + "/" + appName + "/" + viewName + ".m")
 		os.rename(outputPath + "/" + appName + "/ViewController.h", outputPath + "/" + appName + "/" + viewName + ".h")
+
+		os.remove(outputPath + "/json/asdfghjkl.json")
 
 		prepareFiles(outputPath, viewName, "m", appName)
 		prepareFiles(outputPath, viewName, "h", appName)
@@ -339,14 +341,14 @@ def renameFilesAndFolders(root, find, replace, appName):
 	print("Root: " + root + " find: " + find + " replace: " + replace)
 	for path, dirs, files in os.walk(os.path.abspath(root)):
 		#print()
-		print("Files: " + str(files))
+		#print("Files: " + str(files))
 		for dirNr in range(len(dirs)):
 			dirOld = appName + "/" + dirs[dirNr]
 			#dirNew = dirOld.replace(find, replace)
 			dirNew = dirs[dirNr].replace(find, appName)
-			print(dirs[dirNr] +  " --> " + dirNew)
+			#print(dirs[dirNr] +  " --> " + dirNew)
 			if dirNew is not dirs[dirNr]:
-				print(dirs[dirNr] + " ---> " + dirNew)
+				#print(dirs[dirNr] + " ---> " + dirNew)
 				#print("old: " + os.path.join(path, dirs[dirNr]) + " \tvs \tnew: " + os.path.join(path, dirNew))
 				#print("All dirs: " + str(dirs))
 				#print("Path: " + path)
@@ -356,7 +358,7 @@ def renameFilesAndFolders(root, find, replace, appName):
 		for filename in files:
 			filenameNew = filename.replace(find, appName)
 			if filenameNew != filename:
-				print(filename + " --> " + filenameNew)
+				#print(filename + " --> " + filenameNew)
 				os.rename(os.path.join(path, filename), os.path.join(path, filenameNew))
 		#print()		
 		#print("Dirs:")
