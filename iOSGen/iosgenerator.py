@@ -10,11 +10,14 @@ from collections import OrderedDict
 import json
 import configparser
 from shutil import copy
+import shutil
 from pprint import pprint
 import glob
 import time
 import subprocess
 import readline
+from git import *
+import sys
 
 listenM = {}
 listenMP = {}
@@ -22,17 +25,22 @@ listenH = {}
 
 OUTPUTPATH = ""
 VIEWS = []
+usingGit = False
 
-def copyProject(outputPath, debug, args):
+def copyProject(outputPath, debug, args, appName):
 	global VIEWS
-	
+
 	configSetup()
+	if debug: print("Config file loaded")
+
+	print("-"*20)
 	if(os.path.exists(outputPath)):
-		VIEWS = [f for f in os.listdir(outputPath + "/DemoApp/") if re.match("[a-zA-Z0-9]*Base.h", f)]
+		if debug: print("Project already exists...")
+		VIEWS = [f for f in os.listdir(outputPath + "/" + appName + "/") if re.match("[a-zA-Z0-9]*Base.h", f)]
 		#Check that all project files exists.
 
 		print(Fore.CYAN + "Project already exists on current path." + Style.RESET_ALL +
-			"Do you want to update an existing view (1) or add a new view (2)?")
+			"\nDo you want to update an existing view (1) or add a new view (2)?")
 		res = input("Enter 1 or 2: ")
 		while res not in {"1", "2"}:
 			print(Fore.RED + "You entered something invalid." + Style.RESET_ALL + " Try again.")
@@ -41,7 +49,7 @@ def copyProject(outputPath, debug, args):
 		if res == "1": # UPDATE AN EXISTING VIEW
 			print("Update a view selected...")
 
-			fileToBeChanged = selectViewFile(outputPath, debug)
+			fileToBeChanged = selectViewFile(outputPath, appName, debug)
 
 			print(Fore.GREEN + "All good so far! " + Style.RESET_ALL + " File to be changed: " + Fore.CYAN + fileToBeChanged + Style.RESET_ALL)
 
@@ -65,6 +73,7 @@ def copyProject(outputPath, debug, args):
 						+"\nSee the documentation for more information."
 						+Fore.YELLOW+"\nIf you still want to continue, run the same command with '--force' on the end."
 						+Fore.RED+"\nExiting..."+ Style.RESET_ALL)
+					sys.exit("ERROR: Incompatible image sizes.")
 
 
 
@@ -93,45 +102,60 @@ def copyProject(outputPath, debug, args):
 
 
 			#Kopiere mal til ny dest.
-			copy("DemoApp/DemoApp/ViewControllerBase.m", outputPath + "/DemoApp/")
-			copy("DemoApp/DemoApp/ViewControllerBase.h", outputPath + "/DemoApp/")
-			copy("DemoApp/DemoApp/ViewController.m", outputPath + "/DemoApp/")
-			copy("DemoApp/DemoApp/ViewController.h", outputPath + "/DemoApp/")
+			copy("DemoApp/DemoApp/ViewControllerBase.m", outputPath + "/" + appName + "/")
+			copy("DemoApp/DemoApp/ViewControllerBase.h", outputPath + "/" + appName + "/")
+			copy("DemoApp/DemoApp/ViewController.m", outputPath + "/" + appName + "/")
+			copy("DemoApp/DemoApp/ViewController.h", outputPath + "/" + appName + "/")
 			
-			iterateJSONAndGenerateCode(updatedJSON, outputPath, "ViewController", debug)
+			iterateJSONAndGenerateCode(updatedJSON, outputPath, "ViewController", appName, debug)
 			
-			os.remove(outputPath + "/DemoApp/" + fileToBeChanged + ".h")
-			os.remove(outputPath + "/DemoApp/" + fileToBeChanged + ".m")
-			os.remove(outputPath + "/DemoApp/" + fileToBeChanged[:-4] + ".h")
-			os.remove(outputPath + "/DemoApp/" + fileToBeChanged[:-4] + ".m")
+			os.remove(outputPath + "/" + appName + "/" + fileToBeChanged + ".h")
+			os.remove(outputPath + "/" + appName + "/" + fileToBeChanged + ".m")
+			os.remove(outputPath + "/" + appName + "/" + fileToBeChanged[:-4] + ".h")
+			os.remove(outputPath + "/" + appName + "/" + fileToBeChanged[:-4] + ".m")
 
-			os.rename(outputPath + "/DemoApp/ViewControllerBase.m", outputPath + "/DemoApp/" + fileToBeChanged + ".m")
-			os.rename(outputPath + "/DemoApp/ViewControllerBase.h", outputPath + "/DemoApp/" + fileToBeChanged + ".h")
-			os.rename(outputPath + "/DemoApp/ViewController.m", outputPath + "/DemoApp/" + fileToBeChanged[:-4] + ".m")
-			os.rename(outputPath + "/DemoApp/ViewController.h", outputPath + "/DemoApp/" + fileToBeChanged[:-4] + ".h")
+			os.rename(outputPath + "/" + appName + "/ViewControllerBase.m", outputPath + "/" + appName + "/" + fileToBeChanged + ".m")
+			os.rename(outputPath + "/" + appName + "/ViewControllerBase.h", outputPath + "/" + appName + "/" + fileToBeChanged + ".h")
+			os.rename(outputPath + "/" + appName + "/ViewController.m", outputPath + "/" + appName + "/" + fileToBeChanged[:-4] + ".m")
+			os.rename(outputPath + "/" + appName + "/ViewController.h", outputPath + "/" + appName + "/" + fileToBeChanged[:-4] + ".h")
 
-			prepareFiles(outputPath, fileToBeChanged[:-4], "m")
-			prepareFiles(outputPath, fileToBeChanged[:-4], "h")
+			prepareFiles(outputPath, fileToBeChanged[:-4], "m", appName)
+			prepareFiles(outputPath, fileToBeChanged[:-4], "h", appName)
 
 			writeJSONToFile(outputPath, updatedJSON, newMeta, fileToBeChanged[:-4])
 
+			#Is a git repo?
+			if isGitRepo(outputPath):
+				print(Fore.YELLOW + "Detects a git repo!" + Style.RESET_ALL)
+				a = input( "Do you want to commit the changes? (Y/N) ")
+				while a not in {"Y", "N"} : a = input( "Do you want to commit the changes? (Y/N) ")
+				if a is "Y": 
+					git = Git(os.path.abspath(outputPath))
+					git.add("-A") #Add all
+					git.commit("-m", "Changed a view: " + fileToBeChanged[:-4])
+					print(Fore.GREEN + "Commited the changes" + Style.RESET_ALL)
+					print(Fore.YELLOW + "Commit short hash: \t" + Style.RESET_ALL + git.log("--pretty=format:'%h'", "-n", 1))
+					print(Fore.YELLOW + "Commit message:    \t" + Style.RESET_ALL + git.log(-1, "--pretty=%B")) #show last commit message
+				else:
+					print("No commit. Continuing...")
+
 		elif res == "2": # ADD NEW VIEW TO PROJECT
-			print("Add view to existing project")
+			print("Adding view to the existing project...")
 			viewName = input("Enter a name for the new view: ")
 			
 			#Kopiere mal til ny dest.
-			copy("DemoApp/DemoApp/ViewControllerBase.m", outputPath + "/DemoApp/")
-			copy("DemoApp/DemoApp/ViewControllerBase.h", outputPath + "/DemoApp/")
-			copy("DemoApp/DemoApp/ViewController.m", outputPath + "/DemoApp/")
-			copy("DemoApp/DemoApp/ViewController.h", outputPath + "/DemoApp/")
+			copy("DemoApp/DemoApp/ViewControllerBase.m", outputPath + "/" + appName + "/")
+			copy("DemoApp/DemoApp/ViewControllerBase.h", outputPath + "/" + appName + "/")
+			copy("DemoApp/DemoApp/ViewController.m", outputPath + "/" + appName + "/")
+			copy("DemoApp/DemoApp/ViewController.h", outputPath + "/" + appName + "/")
 
-			os.rename(outputPath + "/DemoApp/ViewControllerBase.h", outputPath + "/DemoApp/" + viewName + "Base.h")
-			os.rename(outputPath + "/DemoApp/ViewControllerBase.m", outputPath + "/DemoApp/" + viewName + "Base.m")
-			os.rename(outputPath + "/DemoApp/ViewController.m", outputPath + "/DemoApp/" + viewName + ".m")
-			os.rename(outputPath + "/DemoApp/ViewController.h", outputPath + "/DemoApp/" + viewName + ".h")
+			os.rename(outputPath + "/" + appName + "/ViewControllerBase.h", outputPath + "/" + appName + "/" + viewName + "Base.h")
+			os.rename(outputPath + "/" + appName + "/ViewControllerBase.m", outputPath + "/" + appName + "/" + viewName + "Base.m")
+			os.rename(outputPath + "/" + appName + "/ViewController.m", outputPath + "/" + appName + "/" + viewName + ".m")
+			os.rename(outputPath + "/" + appName + "/ViewController.h", outputPath + "/" + appName + "/" + viewName + ".h")
 
-			prepareFiles(outputPath, viewName, "m")
-			prepareFiles(outputPath, viewName, "h")
+			prepareFiles(outputPath, viewName, "m", appName)
+			prepareFiles(outputPath, viewName, "h", appName)
 			
 			with open(args.jsonPath) as data_file:
 				data = OrderedDict()
@@ -140,21 +164,54 @@ def copyProject(outputPath, debug, args):
 				except ValueError:
 					print(Fore.RED + "Something went wrong. Could not read JSON. Is the JSON structure correct?" + Style.RESET_ALL)
 					return
-				iterateJSONAndGenerateCode(data, outputPath, viewName, debug)
+				iterateJSONAndGenerateCode(data, outputPath, viewName, appName, debug)
 
 				writeJSONToFile(outputPath, data, data["meta"], viewName)
 
-	else: #CREATING A NEW VIEW
+			#Is a git repo?
+			if isGitRepo(outputPath):
+				print(Fore.YELLOW + "Detects a git repo!" + Style.RESET_ALL)
+				a = input( "Do you want to commit the changes? (Y/N) ")
+				while a not in {"Y", "N"} : a = input( "Do you want to commit the changes? (Y/N) ")
+				if a is "Y": 
+					git = Git(os.path.abspath(outputPath))
+					git.add("-A") #Add all
+					git.commit("-m", "Added a new view: " + viewName)
+					print(Fore.GREEN + "Commited the changes" + Style.RESET_ALL)
+					print(Fore.YELLOW + "Commit short hash: \t" + Style.RESET_ALL + git.log("--pretty=format:'%h'", "-n", 1))
+					print(Fore.YELLOW + "Commit message:    \t" + Style.RESET_ALL + git.log(-1, "--pretty=%B")) #show last commit message
+				else:
+					print("No commit. Continuing...")
+
+	else: #CREATING A NEW APP
+		print("Creating a new app...")
+		print("OutputPath: " + outputPath)
+		print("AppName: " + appName)
 
 		copy_tree("DemoApp", outputPath)
+		answer = input("Do you want to initalize this app with git? (Y/N): ")
+		while answer not in {"Y", "N"} : answer = input("Do you want to initalize this app with git? (Y/N): ")
+		usingGit = False
+		if answer is "Y":
+			print(Fore.GREEN + "Git it is!" + Style.RESET_ALL)
+			usingGit = True
+			git = Git(os.path.abspath(outputPath))
+			git.init()
+			if debug: print("Initialized git repository")
 		viewName = input("Enter a name for the new view: ")
-		os.rename(outputPath + "/DemoApp/ViewControllerBase.h", outputPath + "/DemoApp/" + viewName + "Base.h")
-		os.rename(outputPath + "/DemoApp/ViewControllerBase.m", outputPath + "/DemoApp/" + viewName + "Base.m")
-		os.rename(outputPath + "/DemoApp/ViewController.m", outputPath + "/DemoApp/" + viewName + ".m")
-		os.rename(outputPath + "/DemoApp/ViewController.h", outputPath + "/DemoApp/" + viewName + ".h")
+		
+		searchReplaceInAllFoldersAndFiles(outputPath, "DemoApp", appName, (".txt", ".pbxproj", "DemoAppTests.m", "DemoAppUITests.m", "contents.xcworkspacedata"))
+		renameFilesAndFolders(outputPath, "DemoApp", outputPath, appName)
+		
+		os.rename(outputPath + "/" + appName + "/ViewControllerBase.h", outputPath + "/" + appName + "/" + viewName + "Base.h")
+		os.rename(outputPath + "/" + appName + "/ViewControllerBase.m", outputPath + "/" + appName + "/" + viewName + "Base.m")
+		os.rename(outputPath + "/" + appName + "/ViewController.m", outputPath + "/" + appName + "/" + viewName + ".m")
+		os.rename(outputPath + "/" + appName + "/ViewController.h", outputPath + "/" + appName + "/" + viewName + ".h")
 
-		prepareFiles(outputPath, viewName, "m")
-		prepareFiles(outputPath, viewName, "h")
+		os.remove(outputPath + "/json/asdfghjkl.json")
+
+		prepareFiles(outputPath, viewName, "m", appName)
+		prepareFiles(outputPath, viewName, "h", appName)
 		
 		with open(args.jsonPath) as data_file:
 			data = OrderedDict()
@@ -163,15 +220,26 @@ def copyProject(outputPath, debug, args):
 			except ValueError:
 				print(Fore.RED + "Something went wrong. Could not read JSON. Is the JSON structure correct?" + Style.RESET_ALL)
 				return
-			iterateJSONAndGenerateCode(data, outputPath, viewName, debug)
+			iterateJSONAndGenerateCode(data, outputPath, viewName, appName, debug)
 
 			writeJSONToFile(outputPath, data, data["meta"], viewName)
 
 
-		# Det som er inni funksjonen over stod her før.
+		if usingGit:
+			git = Git(os.path.abspath(outputPath))
+			git.add("-A") #Add all
+			git.commit("-m", "Initial commit. Added project files and first view: " + viewName)
+			print(Fore.GREEN + "Commited the project" + Style.RESET_ALL)
+			print(Fore.YELLOW + "Commit short hash: \t" + Style.RESET_ALL + git.log("--pretty=format:'%h'", "-n", 1))
+			print(Fore.YELLOW + "Commit message:    \t" + Style.RESET_ALL + git.log(-1, "--pretty=%B")) #show last commit message
+
+	#På utsiden av den store if'en. Her er "Felles"-delen
+	#newName = input("Enter app name:")
+	#searchReplaceInAllFoldersAndFiles(outputPath, "DemoApp", outputPath, (".txt", ".pbxproj", "DemoAppTests.m", "DemoAppUITests.m", "contents.xcworkspacedata"))
+	
+	#renameFilesAndFolders(outputPath, "DemoApp", outputPath)
 
 	print(Fore.GREEN + "iOS generator done" + Fore.RESET)
-
 
 
 def completer(text, state):
@@ -220,7 +288,7 @@ def regenerateJSON(oldList):
 	return nestedList
 
 
-def iterateJSONAndGenerateCode(data, outputPath, viewName, debug):
+def iterateJSONAndGenerateCode(data, outputPath, viewName, appName, debug):
 	newListeM = []
 	newListeH = []
 	newListeMP = []
@@ -230,20 +298,79 @@ def iterateJSONAndGenerateCode(data, outputPath, viewName, debug):
 			readElement(e[1][1], newListeM, newListeH, newListeMP)
 	if debug: print("Done parsing the JSON elements")
 
-	replaceText(outputPath, "m", viewName, newListeM, newListeMP)
-	replaceText(outputPath, "h", viewName, newListeH, None)
-
-	
+	replaceText(outputPath, "m", viewName, newListeM, newListeMP, appName)
+	replaceText(outputPath, "h", viewName, newListeH, None, appName)
 
 
-def selectViewFile(outputPath, debug):
-	OUTPUTPATH = outputPath
-	print("OUTPUT: ", OUTPUTPATH)
+
+def isGitRepo(path):
+	g = Git(os.path.abspath(path))
+	try:
+		g.rev_parse("--is-inside-work-tree")
+		return True
+	except GitCommandError as e:
+		return False
+	return False
+
+
+"""
+	Iterate all files in given directory and all subdirectories and
+	searches and replaces the searchterm in all files that matches
+	the file pattern.
+"""
+def searchReplaceInAllFoldersAndFiles(root, find, replace, FilePattern):
+	#print("Files to be changed:")
+	for path, dirs, files in os.walk(os.path.abspath(root)):
+		for filename in files:
+			if filename.endswith(FilePattern):
+				filepath = os.path.join(path, filename)
+				#print(filepath)
+				with open(filepath) as f:
+					s = f.read()
+				s = s.replace(find, replace)
+				with open(filepath, "w") as f:
+					f.write(s)	
+
+
+"""
+	Start in a root folder and change the name of all files and
+	subdirectories.
+"""
+def renameFilesAndFolders(root, find, replace, appName):
+
+	print("Root: " + root + " find: " + find + " replace: " + replace)
+	for path, dirs, files in os.walk(os.path.abspath(root)):
+		#print()
+		#print("Files: " + str(files))
+		for dirNr in range(len(dirs)):
+			dirOld = appName + "/" + dirs[dirNr]
+			#dirNew = dirOld.replace(find, replace)
+			dirNew = dirs[dirNr].replace(find, appName)
+			#print(dirs[dirNr] +  " --> " + dirNew)
+			if dirNew is not dirs[dirNr]:
+				#print(dirs[dirNr] + " ---> " + dirNew)
+				#print("old: " + os.path.join(path, dirs[dirNr]) + " \tvs \tnew: " + os.path.join(path, dirNew))
+				#print("All dirs: " + str(dirs))
+				#print("Path: " + path)
+				#print()
+				shutil.move(os.path.join(path, dirs[dirNr]), os.path.join(path, dirNew))
+				dirs[dirNr] = dirNew #Update the dir name in the original list
+		for filename in files:
+			filenameNew = filename.replace(find, appName)
+			if filenameNew != filename:
+				#print(filename + " --> " + filenameNew)
+				os.rename(os.path.join(path, filename), os.path.join(path, filenameNew))
+		#print()		
+		#print("Dirs:")
+				
+
+
+def selectViewFile(outputPath, appName, debug):
 	readline.parse_and_bind("tab: complete")
 	readline.set_completer(completer)
 
 	#Get the name of the view to be changed
-	files = [f for f in os.listdir(outputPath + "/DemoApp/") if re.match("[a-zA-Z0-9]*Base.h", f)]
+	files = [f for f in os.listdir(outputPath + "/" + appName + "/") if re.match("[a-zA-Z0-9]*Base.h", f)]
 	if len(files) == 1:
 		fileToBeChanged = files[0]
 		if debug: print("Found only one view meeting the requirements: " + fileToBeChanged[:-2])
@@ -399,7 +526,7 @@ def saveIOSobjectM(color, elementId, posX, posY, width, height, liste, newListeM
 			newListeM.append(newItem)
 	else:
 		print(Fore.RED + color + " - is not a valid color and will be ignored" + Style.RESET_ALL
-			+"\nRead the documentation to add your own colors and corresponding elements.")
+			+"\n\tRead the documentation to add your own colors and corresponding elements.")
 
 def saveIOSobjectH(color, elementId, listenH, newListeH):
 	if(color in listenH):
@@ -475,11 +602,10 @@ def readElement(element, newListeM, newListeH, newListeMP):
 			readElement(contentStructure[str(i)][1], newListeM, newListeH, newListeMP)
 
 
-def prepareFiles(outputPath, filename, fileType):
-	outputPath = outputPath + "/DemoApp"
+def prepareFiles(outputPath, filename, fileType, appName):
+	outputPath = outputPath + "/" + appName
 	file1 = open(outputPath + "/" + filename + "." + fileType , "r")
 	fileTemp1 = open(outputPath + "/temp.txt", "w")
-
 	for line in file1:
 		if re.search('\{\{viewname\}\}', line):
 			fileTemp1.write(re.sub('\{\{viewname\}\}', filename, line))
@@ -500,9 +626,8 @@ def prepareFiles(outputPath, filename, fileType):
 
 
 
-def replaceText(templatePath, fileType, filename, elements, elements2):
-	templatePath = templatePath+"/DemoApp"
-	print(templatePath)
+def replaceText(templatePath, fileType, filename, elements, elements2, appName):
+	templatePath = templatePath+"/" + appName
 	file1 = open(templatePath + "/" + filename + "Base." + fileType , "r")
 	file2 = open(templatePath + "/NewFile.txt", "w")
 
@@ -546,4 +671,8 @@ if __name__== "__main__":
 	ap.add_argument("-f", "--force", help="Force continue. May result in overwrite and unexpected results.", action="store_true", default=False)
 	args = ap.parse_args()
 
-	copyProject(args.outputPath, args.verbose, args)
+	appName = os.path.basename(os.path.normpath(args.outputPath))
+	print("OUTPUT: " + args.outputPath)
+	print("APP NAME: " + appName)
+
+	copyProject(args.outputPath, args.verbose, args, appName)

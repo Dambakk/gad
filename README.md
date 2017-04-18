@@ -77,3 +77,23 @@ Color codes and corresponding types
 Edit the imageParser/colorTypes.ini file to add your own colors and corresponding elements to be generated.
 
 **NB** There must be at least one white pixel between each element, unless the elements are nested.
+
+The iOS code generator
+===============
+A short description here...
+
+Running the generator:
+-------------
+To run the iOSGenerator open a console and enter the following:
+`python3 PATH_TO_IOSGEN/iosgenerator.py PATH_TO_JSON PATH_TO_OUTPUT`
+where
+- `PATH_TO_IOSGEN` is the location of the iosgenerator on your computer.
+- `PATH_TO_JSON` is the complete filepath to the JSON file containing the description of the view. This JSON file will typically be the output of the Image Parser-tool. E.g. `/home/username/documents/myFirstView.json`
+- `PATH_TO_OUTPUT` is the path to desired place to put the created project or the path to the project to be updated. The last directory will be the folder containing the app and will be the name of the app. E.g. `/home/dev/apps/MyFirstApp` where MyFirstApp is the name of the app.
+
+You can also add one or more of the following flags:
+- `-v` for a more verbose output logging to the console.
+- `-f` is the force flag to make the script continue even if it may cause unexpected behaviour and results. Without the flag, the program will stop and tell the user to add the flag if it encounter any problems.
+
+The script will ask for input during runtime, such as enter a name for the view, select a view or commit changes using git.
+For further help, use `--help` or `-h` when running the tool.

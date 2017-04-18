@@ -5,13 +5,19 @@ from colorama import Fore, Back, Style
 from collections import OrderedDict
 from pprint import pprint
 import configparser
+from bs4 import BeautifulSoup as bs
 
 cssClasses = []
 colorTypes = {}
 
-def parseJson(jsonPath, title, outputPath, debug):
-	if debug: print("Running json parser...")
+htmlElements = {}
 
+"""
+	Main function.
+"""
+def parseJson(jsonPath, title, outputPath, debug):
+
+	#Read config file
 	Config = configparser.RawConfigParser()
 	Config.read("colorTypes.ini")
 	readConfigFile(Config)
@@ -37,47 +43,84 @@ def parseJson(jsonPath, title, outputPath, debug):
 
 		template = fileTemplate.read()
 
+		#Parse the JSON and convert it to HTML
 		html = ""
 		for e in data.items(): # iterate root elements
 			if e[0] != "meta":
 				html += readElement(e[1][1])
 			
-		if debug: print("Done parsing JSON and generating html")
+		#Make the generated html look good w/indention and stuff
+		soup1 = bs(html, "html.parser")
+		prettyHTML1 = soup1.prettify()
 
+		#Insert all user specific variables to template html
 		template = template.replace('$cssLink',  "styles.css")
 		template = template.replace("$title", title)
-		template = template.replace("$content", html)
+		template = template.replace("$content", prettyHTML1)
 
+		#Make the complete HTML look good.
+		soup2 = bs(template, "html.parser")
+		prettyHTML2 = soup2.prettify()
+
+		if debug: print("Done parsing JSON and generating html")
+
+		#Generate css based on HTML
 		css = generateCSS()
 
 		if debug: print("Done generating css")
 
-		fileHTML.write(template)
+		#Write css and HTML to file
+		fileHTML.write(prettyHTML2)
 		fileCSS.write(css)
+		fileHTML.close()
+		fileCSS.close()
 
 		if debug: print("Done writing to file")
 		
-		fileHTML.close()
-		fileCSS.close()
+		#Done! Inform user
 		print(Fore.GREEN + "HTML generator done" + Fore.RESET)
+		print("The result can be found at this location: ")
+		print(Fore.YELLOW + os.path.abspath(outputPath) + Fore.RESET)
 
 
+"""
+	Read the config file for the user-specific colors and their
+	corresponding HTML elements.
+"""
 def readConfigFile(config):
-	options = config.options("color")
-	for option in options:
-		colorTypes["#" + option] = config.get("color", option)
+	
+	#Read the "color <-> tag"-relationship
+	for option in config.options("tags"):
+		colorTypes["#" + option] = config.get("tags", option)
+
+	#Read the "color <-> HTML"-relationship
+	for option in config.options("html-elements"):
+		htmlElements["#" + option] = config.get("html-elements", option)
 
 
+"""
+	Iterates the information about the HTML elements and generates
+	corresponding CSS and returns it.
+
+	Returns the generated CSS.
+"""
 def generateCSS():
 	css = ""
 	for e in cssClasses:
 		css = css + ".{0}-{1}-{2} {{\n \tbackground-color: {3}; \n\tmargin-left:{1}px; \n\tmargin-top:{2}px; \n}}\n".format(e[0], e[2], e[3], e[1])
 	return css
 
+
 """
-	element is an ordered dict
+	Reads a JSON-/ordered dict-element and iterates the childs of
+	an element, if any, in a recirsive way. Then it creates a HTML
+	element of the parsed JSON element according to the stored color
+	and inserts the data from the JSON into the html. 
+
+	Returns the generated HTML.
 """
 def readElement(element):
+	#Read the info from the JSON
 	elementId = element['id']
 	color = element["color"]
 	posX = element["x"]
@@ -87,19 +130,31 @@ def readElement(element):
 	contentStructure = element["content"]
 	tag = colorTypes[color]
 
-	innerHTML = "Lorem" # must be here or else the html wont show anythong...
+	#Iterate the children/content if any
+	innerHTML = "Lorem ipsum" # must be something or else the html wont show anything when openend in a browser...
 	if len(contentStructure) > 0:
 		for i in range(0, len(contentStructure)):
 			innerHTML += readElement(contentStructure[str(i)][1])
 				
-	tekst = "<{0} class='{0}-{5}-{6}' width='{2}' height='{3}'>{4}</{0}>\n".format(tag, color, width, height, innerHTML, posX, posY)
-	
+	#Insert the data from JSON into HTML	
+	html = htmlElements[color] 
+	if "CSSCLASS" in html:
+		html = str(html).replace("CSSCLASS", str(tag+"-"+str(posX)+"-"+str(posY)))
+	if "WIDTH" in html:
+		html = str(html).replace("WIDTH", str(width))
+	if "HEIGHT" in html:
+		html = str(html).replace("HEIGHT", str(height))
+	if "CONTENT" in html:
+		html = str(html).replace("CONTENT", str(innerHTML))
+
 	# check if css class entry already exists and if not, add it to the list.
 	if not (tag, color, posX, posY) in cssClasses:
 		cssClasses.append((tag, color, posX, posY))
 	
-	return tekst
+	return html
 
+
+# Main entry point
 if __name__== "__main__":
 
 	#Initialize argument parser

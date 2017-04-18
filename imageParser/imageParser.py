@@ -21,10 +21,7 @@ def parseImage(path, outputPath, debug):
 
 	CompleteRGBDict = PixelSearcher(height, width, image)
 
-
-
-	if debug :
-		print("Done reading image")
+	if debug :	print("Done reading image")
 
 
 	print(CompleteRGBDict)
@@ -312,9 +309,6 @@ def findTheSquares(corners, squaresList):
 	while len(corners) != 0:
 		firstCorner = corners[0]
 
-		'''corners.pop(0)
-		corners.pop(0)'''
-
 		for i in range(len(corners-2)):
 			secondCorner = corners[i+1]
 
@@ -332,7 +326,6 @@ def findTheSquares(corners, squaresList):
 """
 	Helper function to find the end corners
 """
-
 def findEndCorners(corners, firstCorner, secondCorner):
 	firstValue = -1
 	secondValue = -1
@@ -343,19 +336,6 @@ def findEndCorners(corners, firstCorner, secondCorner):
 			firstValue = number
 			secondValue = number+1
 		number += 1
-
-
-
-
-	"""
-	for i in corners:
-		if(i[1] == firstCorner[1]):
-			firstValue = number
-		if(i[1] == secondCorner[1]):
-			secondValue = number
-			break
-		number += 1
-	"""
 
 	return (firstValue,secondValue)
 
