@@ -8,7 +8,6 @@ import configparser
 import collections
 from collections import OrderedDict
 import time
-
 from operator import itemgetter
 
 
@@ -21,21 +20,26 @@ def parseImage(path, outputPath, debug):
 
 	if debug : print(Fore.GREEN + "Image loaded successfully" + Style.RESET_ALL)
 
+	''' Finds all corners in the image '''
 	CompleteRGBDict = PixelSearcher(height, width, image)
-
 
 
 	if debug :
 		print("Done reading image")
 
-	internalList = createJSONObjects(CompleteRGBDict, outputPath,image ,debug )
+	''' Creates the JSON objects without nesting and parents '''
+	internalList = createJSONObjects(CompleteRGBDict,image ,debug )
 
+	''' Finds the correct Z-values (parents) '''
 	unorderedList = findZValues(internalList)
 
+	''' Creates the correct ordered structure in JSON '''
 	completeListOrdered = createOrderedJSONStructure(unorderedList, debug)
 
+	''' Fixes the nested lists, changing the flat structure to the correct structure with nesting of child elements '''
 	nestedList = fixNesting(completeListOrdered)
 
+	''' Writes the correct nested structure to the specified location '''
 	pathToJSON = writeToFile(outputPath, nestedList, image)
 
 	if debug :
@@ -51,29 +55,26 @@ def parseImage(path, outputPath, debug):
 
 # RGBA, not taking into account the a, yet which will be the transparent parameter
 """
-	Function that searchs through the different pixels - returning the elements
+	Function that searchs through the image and saving corners as a list
 """
 def PixelSearcher(height, width, image):
 
 	RGBCornerPixels = {}
-	number = 0
-	idValue = 0
 	for x in range(0, height):
-		zValue = 0
-		currentColor = -1,-1,-1
-		isWhite = False
 		for y in range(0, width):
 			r,g,b,a = image.getpixel((y, x))
 			if (r != 255 or g != 255 or b != 255):
-				if(x < height and y < width and x > 0 and y > 0):
-					CheckIfCorner(RGBCornerPixels, x, y, image, number, (r,g,b), zValue, idValue)
-					'''CheckIfCornerOneLine(RGBCornerPixels, x, y, image, number, (r,g,b), zValue, idValue)'''
+				if(x < height-1 and y < width-1 and x > 0 and y > 0):
+					CheckIfCorner(RGBCornerPixels, x, y, image, (r,g,b))
+				else:
+					CheckIfCornerAtBorder(RGBCornerPixels, x, y, image, (r,g,b))
 	return RGBCornerPixels
 
 """
-Funksjon som finner ut om vi har et hjørne, må oppdatteres for å takle nesting
+	Function that checks if we have a corner. It checks the four possibilites - top left and right and bottom left and right
+	Helper function to the PixelSearcher to check if the coords are a corner or not
 """
-def CheckIfCorner(RGBCornerPixels, x,y, image, number, RGB, zValue, idValue):
+def CheckIfCorner(RGBCornerPixels, x,y, image, RGB):
 	value1,value2,value3 = RGB
 	r,g,b,a = image.getpixel((y, x-1))
 	c,d,e,f = image.getpixel((y-1, x))
@@ -108,60 +109,33 @@ def CheckIfCorner(RGBCornerPixels, x,y, image, number, RGB, zValue, idValue):
 		RGBCornerPixels[value1,value2,value3].append([x,y])
 
 
-def CheckIfCornerOneLine(RGBCornerPixelsOneLiner, x, y, image, number, RGB, zValue, idValue):
+"""
+	Checks if it is a corner on the edge of the image - also a helper function to the PixelSearcher
+"""
+def CheckIfCornerAtBorder(RGBCornerPixels, x, y, image, RGB):
 	value1,value2,value3 = RGB
-	r,g,b,a = image.getpixel((y, x-1))
-	c,d,e,f = image.getpixel((y-1, x))
-	g,h,i,j = image.getpixel((y+1, x))
-	RGB1 = r,g,b
-	RGB2 = c,d,e
-	RGB3 = g,h,i
 
-	if(RGB != RGB1 and RGB != RGB2 and RGB != RGB3):
+	if(value1 != 255 or value2 != 255 or value3 != 255):
 		try:
-			RGBCornerPixelsOneLiner[value1,value2,value3].append([x,y])
-			RGBCornerPixelsOneLiner[value1,value2,value3].append([x+1,y])
+			RGBCornerPixels[value1,value2,value3].append([x,y])
 		except KeyError:
-			RGBCornerPixelsOneLiner[value1,value2,value3] = [[x,y], [x+1, y]]
-
-	x1,x2,x3,x4 = image.getpixel((y, x+1))
-	z1,z2,z3,z4 = image.getpixel((y-1, x))
-	x5,x6,x7,x8 = image.getpixel((y+1, x))
-	RGB4 = x1,x2,x3
-	RGB5 = z1,z2,z3
-	RGB6 = x5,x6,x7
-	if(RGB != RGB4 and RGB != RGB5 and RGB != RGB6):
-		RGBCornerPixelsOneLiner[value1,value2,value3].append([x,y])
-		RGBCornerPixelsOneLiner[value1,value2,value3].append([x+1,y])
+			RGBCornerPixels[value1,value2,value3] = [[x,y]]
 
 
-	xx1,xx2,xx3,xx4 = image.getpixel((y, x+1))
-	xx5,xx6,xx7,xx8 = image.getpixel((y, x-1))
-	xx9,xx10,xx11,xx12 = image.getpixel((y-1, x))
-	RGB7 = xx1,xx2,xx3
-	RGB8 = xx5,xx6,xx7
-	RGB9 = xx9,xx10,xx11
-	if(RGB != RGB7 and RGB != RGB8 and RGB != RGB9):
-		RGBCornerPixelsOneLiner[value1,value2,value3].append([x,y])
-		RGBCornerPixelsOneLiner[value1,value2,value3].append([x,y+1])
-
-	zz1,zz2,zz3,zz4 = image.getpixel((y, x+1))
-	zz5,zz6,zz7,zz8 = image.getpixel((y, x-1))
-	zz9,zz10,zz11,zz12 = image.getpixel((y+1, x))
-	RGB10 = zz1,zz2,zz3
-	RGB11 = zz5,zz6,zz7
-	RGB12 = zz9,zz10,zz11
-	if(RGB != RGB10 and RGB != RGB11 and RGB != RGB12):
-		RGBCornerPixelsOneLiner[value1,value2,value3].append([x,y])
-		RGBCornerPixelsOneLiner[value1,value2,value3].append([x,y+1])
-
-
+"""
+	Function that converts the RGB value to a hexadecimal value
+"""
 def ConvertToHex(rgbColor):
 	hexValue = '#%02x%02x%02x' % (rgbColor[0], rgbColor[1], rgbColor[2])
 	return hexValue
 
+"""
+	Function that takes the complete dictionary with corners and matches the correct corners to the correct boxes
+	Based on the boxes it creates the JSON objects with different ID's. Correct nesting and parenting is not fixed here,
+	only the flat default structure is fixed here.
+"""
 
-def createJSONObjects(CompleteRGBDict, outputPath, image,debug=False):
+def createJSONObjects(CompleteRGBDict, image,debug=False):
 	objects = []
 	ListToSaveJSONObjects = []
 	listToFindZValues = []
@@ -311,19 +285,79 @@ def writeToFile(outputPath, completeList, image):
 
 
 """
-	Goes through all the elements in the different colors
+	Goes through all the elements in the different colors and maps the correct corners to find the correct boxes
+	Helper function to the createJSONObjects.
 """
 def findTheSquares(corners, squaresList, rgbColor, image):
+
+	''' Removes duplicate entries when hairlines is present '''
+	corners = [list(x) for x in set(tuple(x) for x in corners)]
+	corners.sort(key = lambda element: (element))
+
 	while len(corners) != 0:
 		firstCorner = corners[0]
 
-		minX, minY, maxX, maxY = findMaximumAndMinimumValues(corners, firstCorner, rgbColor, image)
+		a,b,c,d = image.getpixel((firstCorner[1], firstCorner[0]-1))
+		e,f,g,h = image.getpixel((firstCorner[1], firstCorner[0]+1))
+		firstColor = a,b,c
+		secondColor = e,f,g
+
+		x,y,z,w = image.getpixel((firstCorner[1]-1, firstCorner[0]))
+		x1,y1,z1,w1 = image.getpixel((firstCorner[1]+1, firstCorner[0]))
+		thirdColor = x,y,z
+		fourthColor = x1,y1,z1
+
+		''' Checks if it is a hairline - handeled different '''
+		if((firstColor != rgbColor and secondColor != rgbColor) or (thirdColor != rgbColor and fourthColor != rgbColor)):
+			minX, minY, maxX, maxY = findMaxAndMinHairLine(firstCorner, corners, rgbColor, image, firstColor, secondColor)
+
+		else:
+			minX, minY, maxX, maxY = findMaximumAndMinimumValues(corners, firstCorner, rgbColor, image)
+
 		corners.pop(0)
+		#if(minX == maxX):
+		#	maxX += 1
 		squaresList.append([[minY, minX], [minY, maxX], [maxY, minX], [maxY, maxX]])
 
+
 """
-	Helper function to find the corners
-	Searches around the box to find the correct maximum and minimum values
+		Follows the hairline pixels, then gives the correct widht/height back.
+		Helper function to findTheSquares - special case hairline.
+"""
+
+def findMaxAndMinHairLine(firstCorner, corners, rgbColor, image, firstColor, secondColor):
+
+	minX = firstCorner[1]
+	maxX = firstCorner[1]+1
+	minY = firstCorner[0]
+	maxY = firstCorner[0]+1
+
+	a,b,c = rgbColor
+	d = 255
+	newColor = a,b,c,d
+
+	if(firstColor != rgbColor and secondColor != rgbColor):
+		while(image.getpixel((maxX, firstCorner[0])) == newColor):
+			testValue = [firstCorner[0], maxX]
+			for value in corners:
+				if(testValue == value):
+					corners.remove(value)
+			maxX += 1
+		return minX, minY, maxX, maxY
+	else:
+
+		while(image.getpixel((firstCorner[1], maxY)) == newColor):
+			testValue = [maxY, firstCorner[1]]
+			for value in corners:
+				if(testValue == value):
+					corners.remove(value)
+			maxY += 1
+		return minX, minY, maxX, maxY
+
+
+"""
+	Helper function to find the corners (findTheSquares)
+	Searches "around" the box to find the correct maximum and minimum values, the loop function
 	returns the max and minimum x and y values
 """
 
@@ -339,36 +373,62 @@ def findMaximumAndMinimumValues(corners, firstCorner, rgbColor, image):
 	maxX = firstCorner[1]
 	maxY = firstCorner[0]
 
-	testValue = [xValue, yValue]
+	width, height = image.size
 
-	if(image.getpixel((firstCorner[1]+1, firstCorner[0])) == rgbColor and image.getpixel((firstCorner[1]+1, firstCorner[0]-1)) != rgbColor):
+	if(image.getpixel((firstCorner[1], firstCorner[0])) == rgbColor and (firstCorner[0] == 0 or firstCorner[1] == 0)):
 		xValue = firstCorner[1]+1
 		yValue = firstCorner[0]
 
-	while(xValue != firstCorner[1] or yValue != firstCorner[0]):
+	if(firstCorner[1] != width-1 and firstCorner[1] != 0 and firstCorner[0] != 0 and firstCorner[0] != height-1):
+		if(image.getpixel((firstCorner[1]+1, firstCorner[0])) == rgbColor and image.getpixel((firstCorner[1]+1, firstCorner[0]-1)) != rgbColor):
+			xValue = firstCorner[1]+1
+			yValue = firstCorner[0]
+			maxX += 1
 
+
+	while(xValue != firstCorner[1] or yValue != firstCorner[0]):
 		testValue = [yValue, xValue]
 		for value in corners:
 			if(testValue == value):
 				corners.remove(value)
 
-		if((image.getpixel((xValue+1, yValue)) == rgbColor and image.getpixel((xValue+1, yValue-1)) != rgbColor) or (image.getpixel((xValue+1, yValue+1)) == rgbColor and image.getpixel((xValue+1, yValue)) != rgbColor)):
-			xValue = xValue+1
-			if(xValue > maxX):
-				maxX = xValue
+		if(xValue == width-1 or yValue == height-1 or xValue == 0 or yValue == 0):
+			if((yValue == 0 and xValue < width-1 and image.getpixel((xValue+1, yValue)) == rgbColor) or (yValue != 0 and xValue == 0 and image.getpixel((xValue, yValue-1)) != rgbColor)):
+				xValue = xValue+1
+				if(xValue > maxX):
+					maxX = xValue
 
-		elif((image.getpixel((xValue-1, yValue)) == rgbColor and image.getpixel((xValue, yValue+1)) != rgbColor) or image.getpixel((xValue-1, yValue-1)) == rgbColor and image.getpixel((xValue-1, yValue)) != rgbColor):
-			xValue = xValue-1
-			if(xValue < minX):
-				minX = xValue
+			elif(xValue != 0 and yValue < height-1 and image.getpixel((xValue, yValue+1)) == rgbColor):
+				yValue = yValue+1
+				if(yValue > maxY):
+					maxY = yValue
 
-		elif(image.getpixel((xValue, yValue+1)) == rgbColor and image.getpixel((xValue+1, yValue+1)) != rgbColor):
-			yValue = yValue+1
-			if(yValue > maxY):
-				maxY = yValue
+			elif(xValue > 0 and image.getpixel((xValue-1, yValue)) == rgbColor):
+				xValue = xValue-1
+				if(xValue < minX):
+					minX = xValue
 
-		elif((image.getpixel((xValue, yValue-1)) == rgbColor and image.getpixel((xValue-1, yValue-1)) != rgbColor) or (image.getpixel((xValue+1, yValue-1)) == rgbColor and image.getpixel((xValue, yValue-1)) != rgbColor)):
-			yValue = yValue-1
+			elif(image.getpixel((xValue, yValue-1)) == rgbColor):
+				yValue = yValue-1
+
+		else:
+			if((image.getpixel((xValue+1, yValue)) == rgbColor and image.getpixel((xValue+1, yValue-1)) != rgbColor) or (image.getpixel((xValue+1, yValue+1)) == rgbColor and image.getpixel((xValue+1, yValue)) != rgbColor)):
+				xValue = xValue+1
+				if(xValue > maxX):
+					maxX = xValue
+
+			elif((image.getpixel((xValue-1, yValue)) == rgbColor and image.getpixel((xValue, yValue+1)) != rgbColor) or image.getpixel((xValue-1, yValue-1)) == rgbColor and image.getpixel((xValue-1, yValue)) != rgbColor):
+				xValue = xValue-1
+				if(xValue < minX):
+					minX = xValue
+
+			elif(image.getpixel((xValue, yValue+1)) == rgbColor and image.getpixel((xValue+1, yValue+1)) != rgbColor):
+				yValue = yValue+1
+				if(yValue > maxY):
+					maxY = yValue
+
+			elif((image.getpixel((xValue, yValue-1)) == rgbColor and image.getpixel((xValue-1, yValue-1)) != rgbColor) or (image.getpixel((xValue+1, yValue-1)) == rgbColor and image.getpixel((xValue, yValue-1)) != rgbColor)):
+				yValue = yValue-1
 
 	return minX, minY, maxX, maxY
 
