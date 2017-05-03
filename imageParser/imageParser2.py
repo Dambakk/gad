@@ -9,6 +9,7 @@ import collections
 from collections import OrderedDict
 import time
 from operator import itemgetter
+from copy import deepcopy
 
 
 """
@@ -178,7 +179,30 @@ def createJSONObjects(CompleteRGBDict, image,debug=False):
 	the new, correctly nested list.
 """
 def fixNesting(elementsOrdered):
+	#tempList = deepcopy(elementsOrdered)
 	nestedList = OrderedDict()
+	"""
+	#Calculate relatice coordinates
+	for e in elementsOrdered.items():
+		#print(e)
+		print("ID: " + e[0])
+		parent = e[1]["parent"]
+
+		#tempList[e[0]] = e
+		#print("Temp list element before: ", tempList[e[0]])
+		#e[1]["x"] = 15
+		#print("Temp list element after: ", tempList[e[0]])
+		if parent is not -1:
+			tempList[e[0]]["x"] = e[1]["x"] - elementsOrdered[str(parent)]["x"]
+			tempList[e[0]]["y"] = e[1]["y"] - elementsOrdered[str(parent)]["y"]
+			#print("new element: ", tempList[e[0]])
+			
+	print("Org list:")
+	print(elementsOrdered)
+	print()
+	print("Temp list: ")
+	print(tempList)
+	"""
 
 	#Connect those with parents by move references around
 	for e in elementsOrdered.items():
@@ -188,17 +212,32 @@ def fixNesting(elementsOrdered):
 			e[1]['parentColor'] = elementsOrdered[str(parent)]["color"]
 
 			#Add relative coordinates:
-			e[1]["x"] = e[1]["x"] - elementsOrdered[str(parent)]["x"]
-			e[1]["y"] = e[1]["y"] - elementsOrdered[str(parent)]["y"]
+			e[1]["relX"] = e[1]["x"] - elementsOrdered[str(parent)]["x"]
+			e[1]["relY"] = e[1]["y"] - elementsOrdered[str(parent)]["y"]
 
-			#Add element as child/content of parent:
+			#Append element as child/content of parent:
 			elementsOrdered[str(parent)]["content"][size] = e
+			#print("element ", e[1]["id"], " is added as child of element ", parent)
+		elif parent is -1:
+			e[1]["relX"] = e[1]["x"]
+			e[1]["relY"] = e[1]["y"]
+
+	#print()
+	#print("Temp list: ")
+	#print(tempList)
+
 
 	#Move root elemets with nested elements to own list
 	for e in elementsOrdered.items():
 		parent = e[1]["parent"]
+		#print("Parent: ", parent)
 		if parent is -1:
 			nestedList[e[0]] = e
+			print(e[1]["id"], " has parent ", parent)
+
+	print()
+	print("nested list: ")
+	print(nestedList)
 
 	return nestedList
 
@@ -257,6 +296,8 @@ def createOrderedJSONStructure(unorderedList, debug):
 		data2['color'] = element[0]
 		data2['x'] = element[1][1]
 		data2['y'] = element[1][0]
+		data2['relX'] = -1
+		data2['relY'] = -1
 		data2["width"] = element[2][1] - element[1][1]
 		data2["height"] = element[3][0] - element[1][0]
 		data2["content"] = OrderedDict()

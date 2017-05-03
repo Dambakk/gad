@@ -107,7 +107,7 @@ def readConfigFile(config):
 def generateCSS():
 	css = ""
 	for e in cssClasses:
-		css = css + ".{0}-{1}-{2} {{\n \tbackground-color: {3}; \n\tmargin-left:{1}px; \n\tmargin-top:{2}px; \n}}\n".format(e[0], e[2], e[3], e[1])
+		css = css + ".{0}-{1}-{2}-{4}-{5} {{\n \tbackground-color: {3}; \n\tmargin-left:{1}px; \n\tmargin-top:{2}px; \n\twidth:{4}px; \n\theight:{5}px; \n}}\n".format(e[0], e[2], e[3], e[1], e[4], e[5])
 	return css
 
 
@@ -125,6 +125,8 @@ def readElement(element):
 	color = element["color"]
 	posX = element["x"]
 	posY = element["y"]
+	relX = element["relX"]
+	relY = element["relY"]
 	width = element["width"]
 	height = element["height"]
 	contentStructure = element["content"]
@@ -139,17 +141,13 @@ def readElement(element):
 	#Insert the data from JSON into HTML	
 	html = htmlElements[color] 
 	if "CSSCLASS" in html:
-		html = str(html).replace("CSSCLASS", str(tag+"-"+str(posX)+"-"+str(posY)))
-	if "WIDTH" in html:
-		html = str(html).replace("WIDTH", str(width))
-	if "HEIGHT" in html:
-		html = str(html).replace("HEIGHT", str(height))
+		html = str(html).replace("CSSCLASS", str(tag+"-"+str(relX)+"-"+str(relY)+"-"+str(width)+"-"+str(height)))
 	if "CONTENT" in html:
 		html = str(html).replace("CONTENT", str(innerHTML))
 
 	# check if css class entry already exists and if not, add it to the list.
-	if not (tag, color, posX, posY) in cssClasses:
-		cssClasses.append((tag, color, posX, posY))
+	if not (tag, color, relX, relY, width, height) in cssClasses:
+		cssClasses.append((tag, color, relX, relY, width, height))
 	
 	return html
 

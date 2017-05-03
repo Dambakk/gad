@@ -338,30 +338,18 @@ def searchReplaceInAllFoldersAndFiles(root, find, replace, FilePattern):
 """
 def renameFilesAndFolders(root, find, replace, appName):
 
-	print("Root: " + root + " find: " + find + " replace: " + replace)
+	#print("Root: " + root + " find: " + find + " replace: " + replace)
 	for path, dirs, files in os.walk(os.path.abspath(root)):
-		#print()
-		#print("Files: " + str(files))
 		for dirNr in range(len(dirs)):
 			dirOld = appName + "/" + dirs[dirNr]
-			#dirNew = dirOld.replace(find, replace)
 			dirNew = dirs[dirNr].replace(find, appName)
-			#print(dirs[dirNr] +  " --> " + dirNew)
 			if dirNew is not dirs[dirNr]:
-				#print(dirs[dirNr] + " ---> " + dirNew)
-				#print("old: " + os.path.join(path, dirs[dirNr]) + " \tvs \tnew: " + os.path.join(path, dirNew))
-				#print("All dirs: " + str(dirs))
-				#print("Path: " + path)
-				#print()
 				shutil.move(os.path.join(path, dirs[dirNr]), os.path.join(path, dirNew))
 				dirs[dirNr] = dirNew #Update the dir name in the original list
 		for filename in files:
 			filenameNew = filename.replace(find, appName)
 			if filenameNew != filename:
-				#print(filename + " --> " + filenameNew)
 				os.rename(os.path.join(path, filename), os.path.join(path, filenameNew))
-		#print()		
-		#print("Dirs:")
 				
 
 
@@ -587,13 +575,15 @@ def readElement(element, newListeM, newListeH, newListeMP):
 	color = element["color"]
 	posX = element["x"]
 	posY = element["y"]
+	relX = element["relX"]
+	relY = element["relY"]
 	width = element["width"]
 	height = element["height"]
 	parent = element["parent"]
 	parentColor = element['parentColor']
 	contentStructure = element["content"]
 
-	saveIOSobjectM(color, elementId, posX, posY, width, height, listenM, newListeM)
+	saveIOSobjectM(color, elementId, relX, relY, width, height, listenM, newListeM)
 	saveIOSobjectH(color, elementId,listenH, newListeH)
 	saveIOSobjectMP(newListeMP, parentColor, elementId, parent, listenMP, color)
 
