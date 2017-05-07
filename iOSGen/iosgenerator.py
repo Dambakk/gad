@@ -98,17 +98,19 @@ def copyProject(outputPath, debug, args, appName):
 			#Funksjon for å sjekke om vi har riktige ID'er
 			checkIfCorrectID(newFlatJSONList, oldFlatJSONList, finalJSONID)
 
+
 			updatedJSON = regenerateJSON(newFlatJSONList)
 
+			#print(updatedJSON)
 
 			#Kopiere mal til ny dest.
 			copy("DemoApp/DemoApp/ViewControllerBase.m", outputPath + "/" + appName + "/")
 			copy("DemoApp/DemoApp/ViewControllerBase.h", outputPath + "/" + appName + "/")
 			copy("DemoApp/DemoApp/ViewController.m", outputPath + "/" + appName + "/")
 			copy("DemoApp/DemoApp/ViewController.h", outputPath + "/" + appName + "/")
-			
+
 			iterateJSONAndGenerateCode(updatedJSON, outputPath, "ViewController", appName, debug)
-			
+
 			os.remove(outputPath + "/" + appName + "/" + fileToBeChanged + ".h")
 			os.remove(outputPath + "/" + appName + "/" + fileToBeChanged + ".m")
 			os.remove(outputPath + "/" + appName + "/" + fileToBeChanged[:-4] + ".h")
@@ -129,7 +131,7 @@ def copyProject(outputPath, debug, args, appName):
 				print(Fore.YELLOW + "Detects a git repo!" + Style.RESET_ALL)
 				a = input( "Do you want to commit the changes? (Y/N) ")
 				while a not in {"Y", "N"} : a = input( "Do you want to commit the changes? (Y/N) ")
-				if a is "Y": 
+				if a is "Y":
 					git = Git(os.path.abspath(outputPath))
 					git.add("-A") #Add all
 					git.commit("-m", "Changed a view: " + fileToBeChanged[:-4])
@@ -142,7 +144,7 @@ def copyProject(outputPath, debug, args, appName):
 		elif res == "2": # ADD NEW VIEW TO PROJECT
 			print("Adding view to the existing project...")
 			viewName = input("Enter a name for the new view: ")
-			
+
 			#Kopiere mal til ny dest.
 			copy("DemoApp/DemoApp/ViewControllerBase.m", outputPath + "/" + appName + "/")
 			copy("DemoApp/DemoApp/ViewControllerBase.h", outputPath + "/" + appName + "/")
@@ -156,7 +158,7 @@ def copyProject(outputPath, debug, args, appName):
 
 			prepareFiles(outputPath, viewName, "m", appName)
 			prepareFiles(outputPath, viewName, "h", appName)
-			
+
 			with open(args.jsonPath) as data_file:
 				data = OrderedDict()
 				try:
@@ -173,7 +175,7 @@ def copyProject(outputPath, debug, args, appName):
 				print(Fore.YELLOW + "Detects a git repo!" + Style.RESET_ALL)
 				a = input( "Do you want to commit the changes? (Y/N) ")
 				while a not in {"Y", "N"} : a = input( "Do you want to commit the changes? (Y/N) ")
-				if a is "Y": 
+				if a is "Y":
 					git = Git(os.path.abspath(outputPath))
 					git.add("-A") #Add all
 					git.commit("-m", "Added a new view: " + viewName)
@@ -199,10 +201,10 @@ def copyProject(outputPath, debug, args, appName):
 			git.init()
 			if debug: print("Initialized git repository")
 		viewName = input("Enter a name for the new view: ")
-		
+
 		searchReplaceInAllFoldersAndFiles(outputPath, "DemoApp", appName, (".txt", ".pbxproj", "DemoAppTests.m", "DemoAppUITests.m", "contents.xcworkspacedata"))
 		renameFilesAndFolders(outputPath, "DemoApp", outputPath, appName)
-		
+
 		os.rename(outputPath + "/" + appName + "/ViewControllerBase.h", outputPath + "/" + appName + "/" + viewName + "Base.h")
 		os.rename(outputPath + "/" + appName + "/ViewControllerBase.m", outputPath + "/" + appName + "/" + viewName + "Base.m")
 		os.rename(outputPath + "/" + appName + "/ViewController.m", outputPath + "/" + appName + "/" + viewName + ".m")
@@ -212,7 +214,7 @@ def copyProject(outputPath, debug, args, appName):
 
 		prepareFiles(outputPath, viewName, "m", appName)
 		prepareFiles(outputPath, viewName, "h", appName)
-		
+
 		with open(args.jsonPath) as data_file:
 			data = OrderedDict()
 			try:
@@ -236,7 +238,7 @@ def copyProject(outputPath, debug, args, appName):
 	#På utsiden av den store if'en. Her er "Felles"-delen
 	#newName = input("Enter app name:")
 	#searchReplaceInAllFoldersAndFiles(outputPath, "DemoApp", outputPath, (".txt", ".pbxproj", "DemoAppTests.m", "DemoAppUITests.m", "contents.xcworkspacedata"))
-	
+
 	#renameFilesAndFolders(outputPath, "DemoApp", outputPath)
 
 	print(Fore.GREEN + "iOS generator done" + Fore.RESET)
@@ -257,13 +259,15 @@ def regenerateJSON(oldList):
 	for element in oldList:
 		data = OrderedDict()
 		data['id'] = element[0]
-		data['parent'] = element[6]
-		data['parentColor'] = element[7]
+		data['parent'] = element[8]
+		data['parentColor'] = element[9]
 		data['color'] = element[1]
 		data['x'] = element[2]
 		data['y'] = element[3]
-		data["width"] = element[4]
-		data["height"] = element[5]
+		data['relX'] = element[4]
+		data['relY'] = element[5]
+		data["width"] = element[6]
+		data["height"] = element[7]
 		data["content"] = OrderedDict()
 
 		newFlatJson[element[0]] = data
@@ -298,6 +302,10 @@ def iterateJSONAndGenerateCode(data, outputPath, viewName, appName, debug):
 			readElement(e[1][1], newListeM, newListeH, newListeMP)
 	if debug: print("Done parsing the JSON elements")
 
+	#print(" ")
+	#print(newListeM, "is the list")
+	#print(" ")
+
 	replaceText(outputPath, "m", viewName, newListeM, newListeMP, appName)
 	replaceText(outputPath, "h", viewName, newListeH, None, appName)
 
@@ -329,7 +337,7 @@ def searchReplaceInAllFoldersAndFiles(root, find, replace, FilePattern):
 					s = f.read()
 				s = s.replace(find, replace)
 				with open(filepath, "w") as f:
-					f.write(s)	
+					f.write(s)
 
 
 """
@@ -350,7 +358,7 @@ def renameFilesAndFolders(root, find, replace, appName):
 			filenameNew = filename.replace(find, appName)
 			if filenameNew != filename:
 				os.rename(os.path.join(path, filename), os.path.join(path, filenameNew))
-				
+
 
 
 def selectViewFile(outputPath, appName, debug):
@@ -384,6 +392,9 @@ def selectViewFile(outputPath, appName, debug):
 	Write the ordered list to file in a JSON structure
 """
 def writeJSONToFile(outputPath, completeList, meta, viewName):
+
+	#print(completeList)
+
 	filePath = outputPath+"/json/"+viewName+".json"
 	if not os.path.exists(outputPath):
 		os.makedirs(outputPath)
@@ -399,13 +410,24 @@ def writeJSONToFile(outputPath, completeList, meta, viewName):
 
 
 def checkIfCorrectID(newJSON, oldJSON, finalJSONID):
-
+	print(newJSON)
+	print(" ")
+	print(oldJSON)
+	print(" ")
+	print(finalJSONID)
+	try:
+		counter = max(finalJSONID)+1
+	except:
+		None
 	for i in newJSON:
 		tempListe = []
 		isBreak = False
 		for j in oldJSON:
 
-			if(i[1] == j[1] and i[2] == j[2] and i[3] == j[3] and i[4] == j[4] and i[5] == j[5]):
+			if(i[1] == j[1] and i[2] == j[2] and i[3] == j[3] and i[6] == j[6] and i[7] == j[7]):
+				print(i)
+				print(" ")
+				print(j)
 				i[0] = j[0]
 				oldJSON.remove(j)
 				isBreak = True
@@ -415,28 +437,40 @@ def checkIfCorrectID(newJSON, oldJSON, finalJSONID):
 
 		if tempListe:
 			match = percentageMatch(tempListe, i)
-			i[0] = match[0]
-			oldJSON.remove(match)
-		elif finalJSONID and isBreak == True:
+
+			try:
+				i[0] = match[0]
+				oldJSON.remove(match)
+			except:
+				i[0] = counter
+				counter += 1
+		elif finalJSONID and isBreak == False:
 			#print("We came here")
 			i[0] = finalJSONID.pop(0)
 
 
-		#print(tempListe)
+		print(tempListe)
+
+
+	print(newJSON)
 
 def percentageMatch(tempListe, elementToCheck):
-	NUMBER = 200
+	NUMBER = 250
 	TRESHOLD = 0.1
 	for currentElement in tempListe:
-		percentage = abs((currentElement[2]-elementToCheck[2])/NUMBER) + abs((currentElement[3]-elementToCheck[3])/NUMBER) + abs((currentElement[4]-elementToCheck[4])/NUMBER) + abs((currentElement[5]-elementToCheck[5])/NUMBER)
+		print(currentElement, " ---------------------------")
+		print(elementToCheck)
+		percentage = abs((currentElement[2]-elementToCheck[2])/NUMBER) + abs((currentElement[3]-elementToCheck[3])/NUMBER) + abs((currentElement[6]-elementToCheck[6])/NUMBER) + abs((currentElement[7]-elementToCheck[7])/NUMBER)
 		currentElement.append(percentage)
-		#print(currentElement)
+		print(currentElement)
 
 	tempListe.sort(key=lambda x: x[8])
 
 	#print(tempListe)
 
-	if(tempListe[0][8] < TRESHOLD):
+	if(tempListe[0][10] < TRESHOLD):
+		print("came here")
+		print(tempListe[0][8])
 		del tempListe[0][-1]
 		#print(tempListe[0])
 		return tempListe[0]
@@ -549,12 +583,14 @@ def readElementForNewListe(element, newListe):
 		color = element["color"]
 		posX = element["x"]
 		posY = element["y"]
+		relX = element["relX"]
+		relY = element["relY"]
 		width = element["width"]
 		height = element["height"]
 		parent = element["parent"]
 		parentColor = element['parentColor']
 
-		newListe.append([elementId, color, posX, posY, width, height, parent, parentColor])
+		newListe.append([elementId, color, posX, posY, relX, relY, width, height, parent, parentColor])
 
 		if len(contentStructure) > 0:
 			for i in range (0, len(contentStructure)):
@@ -589,8 +625,10 @@ def readElement(element, newListeM, newListeH, newListeMP):
 
 	if len(contentStructure) > 0:
 		for i in range (0, len(contentStructure)):
-			readElement(contentStructure[str(i)][1], newListeM, newListeH, newListeMP)
-
+			try:
+				readElement(contentStructure[str(i)][1], newListeM, newListeH, newListeMP)
+			except:
+				readElement(contentStructure[i][1], newListeM, newListeH, newListeMP)
 
 def prepareFiles(outputPath, filename, fileType, appName):
 	outputPath = outputPath + "/" + appName
@@ -607,7 +645,7 @@ def prepareFiles(outputPath, filename, fileType, appName):
 	file2 = open(outputPath + "/" + filename + "." + fileType , "w")
 	fileTemp2 = open(outputPath + "/temp.txt", "r")
 
-	for line in fileTemp2: 
+	for line in fileTemp2:
 		file2.write(line)
 
 	file2.close()

@@ -48,7 +48,7 @@ def parseJson(jsonPath, title, outputPath, debug):
 		for e in data.items(): # iterate root elements
 			if e[0] != "meta":
 				html += readElement(e[1][1])
-			
+
 		#Make the generated html look good w/indention and stuff
 		soup1 = bs(html, "html.parser")
 		prettyHTML1 = soup1.prettify()
@@ -76,7 +76,7 @@ def parseJson(jsonPath, title, outputPath, debug):
 		fileCSS.close()
 
 		if debug: print("Done writing to file")
-		
+
 		#Done! Inform user
 		print(Fore.GREEN + "HTML generator done" + Fore.RESET)
 		print("The result can be found at this location: ")
@@ -88,7 +88,7 @@ def parseJson(jsonPath, title, outputPath, debug):
 	corresponding HTML elements.
 """
 def readConfigFile(config):
-	
+
 	#Read the "color <-> tag"-relationship
 	for option in config.options("tags"):
 		colorTypes["#" + option] = config.get("tags", option)
@@ -107,7 +107,7 @@ def readConfigFile(config):
 def generateCSS():
 	css = ""
 	for e in cssClasses:
-		css = css + ".{0}-{1}-{2}-{4}-{5} {{\n \tbackground-color: {3}; \n\tmargin-left:{1}px; \n\tmargin-top:{2}px; \n\twidth:{4}px; \n\theight:{5}px; \n}}\n".format(e[0], e[2], e[3], e[1], e[4], e[5])
+		css = css + ".{0}-{1}-{2}-{4}-{5} {{\n\tbackground-color: {3}; \n\tmargin-left:{1}px; \n\tmargin-top:{2}px; \n\twidth:{4}px; \n\theight:{5}px; \n\tposition:fixed; \n}}\n".format(e[0], e[2], e[3], e[1], e[4], e[5])
 	return css
 
 
@@ -115,7 +115,7 @@ def generateCSS():
 	Reads a JSON-/ordered dict-element and iterates the childs of
 	an element, if any, in a recirsive way. Then it creates a HTML
 	element of the parsed JSON element according to the stored color
-	and inserts the data from the JSON into the html. 
+	and inserts the data from the JSON into the html.
 
 	Returns the generated HTML.
 """
@@ -133,13 +133,13 @@ def readElement(element):
 	tag = colorTypes[color]
 
 	#Iterate the children/content if any
-	innerHTML = "Lorem ipsum" # must be something or else the html wont show anything when openend in a browser...
+	innerHTML = "" # must be something or else the html wont show anything when openend in a browser...
 	if len(contentStructure) > 0:
 		for i in range(0, len(contentStructure)):
 			innerHTML += readElement(contentStructure[str(i)][1])
-				
-	#Insert the data from JSON into HTML	
-	html = htmlElements[color] 
+
+	#Insert the data from JSON into HTML
+	html = htmlElements[color]
 	if "CSSCLASS" in html:
 		html = str(html).replace("CSSCLASS", str(tag+"-"+str(relX)+"-"+str(relY)+"-"+str(width)+"-"+str(height)))
 	if "CONTENT" in html:
@@ -148,7 +148,7 @@ def readElement(element):
 	# check if css class entry already exists and if not, add it to the list.
 	if not (tag, color, relX, relY, width, height) in cssClasses:
 		cssClasses.append((tag, color, relX, relY, width, height))
-	
+
 	return html
 
 

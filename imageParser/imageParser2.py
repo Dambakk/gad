@@ -196,7 +196,7 @@ def fixNesting(elementsOrdered):
 			tempList[e[0]]["x"] = e[1]["x"] - elementsOrdered[str(parent)]["x"]
 			tempList[e[0]]["y"] = e[1]["y"] - elementsOrdered[str(parent)]["y"]
 			#print("new element: ", tempList[e[0]])
-			
+
 	print("Org list:")
 	print(elementsOrdered)
 	print()
@@ -344,18 +344,25 @@ def findTheSquares(corners, squaresList, rgbColor, image):
 	while len(corners) != 0:
 		firstCorner = corners[0]
 
-		a,b,c,d = image.getpixel((firstCorner[1], firstCorner[0]-1))
-		e,f,g,h = image.getpixel((firstCorner[1], firstCorner[0]+1))
-		firstColor = a,b,c
-		secondColor = e,f,g
-
-		x,y,z,w = image.getpixel((firstCorner[1]-1, firstCorner[0]))
-		x1,y1,z1,w1 = image.getpixel((firstCorner[1]+1, firstCorner[0]))
-		thirdColor = x,y,z
-		fourthColor = x1,y1,z1
+		try:
+			a,b,c,d = image.getpixel((firstCorner[1], firstCorner[0]-1))
+			e,f,g,h = image.getpixel((firstCorner[1], firstCorner[0]+1))
+			firstColor = a,b,c
+			secondColor = e,f,g
+		except:
+			firstColor = None
+			secondColor = None
+		try:
+			x,y,z,w = image.getpixel((firstCorner[1]-1, firstCorner[0]))
+			x1,y1,z1,w1 = image.getpixel((firstCorner[1]+1, firstCorner[0]))
+			thirdColor = x,y,z
+			fourthColor = x1,y1,z1
+		except:
+			thirdColor = None
+			fourthColor = None
 
 		''' Checks if it is a hairline - handeled different '''
-		if((firstColor != rgbColor and secondColor != rgbColor) or (thirdColor != rgbColor and fourthColor != rgbColor)):
+		if((firstColor != rgbColor and secondColor != rgbColor and firstColor != None and secondColor != None) or (thirdColor != rgbColor and fourthColor != rgbColor and thirdColor != None and fourthColor != None)):
 			minX, minY, maxX, maxY = findMaxAndMinHairLine(firstCorner, corners, rgbColor, image, firstColor, secondColor)
 
 		else:
