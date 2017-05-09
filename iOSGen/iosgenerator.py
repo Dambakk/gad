@@ -418,7 +418,10 @@ def checkIfCorrectID(newJSON, oldJSON, finalJSONID):
 	try:
 		counter = max(finalJSONID)+1
 	except:
-		None
+		sortedList = newJSON[:]
+		sortedList.sort(key = lambda element: (element[0]), reverse=True)
+		counter = sortedList[0][0] + 1
+
 	for i in newJSON:
 		tempListe = []
 		isBreak = False
