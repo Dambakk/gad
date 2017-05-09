@@ -202,7 +202,10 @@ def copyProject(outputPath, debug, args, appName):
 			if debug: print("Initialized git repository")
 		viewName = input("Enter a name for the new view: ")
 
-		searchReplaceInAllFoldersAndFiles(outputPath, "DemoApp", appName, (".txt", ".pbxproj", "DemoAppTests.m", "DemoAppUITests.m", "contents.xcworkspacedata"))
+		#TODO: Add some form of checking on the name for any invalid input?
+
+		searchReplaceInAllFoldersAndFiles(outputPath, "DemoApp", appName, (".txt", ".pbxproj", "DemoAppTests.m", "DemoAppUITests.m", "contents.xcworkspacedata", "AppDelegate.m"))
+		searchReplaceInAllFoldersAndFiles(outputPath, "viewname", viewName, ("AppDelegate.m"))
 		renameFilesAndFolders(outputPath, "DemoApp", outputPath, appName)
 
 		os.rename(outputPath + "/" + appName + "/ViewControllerBase.h", outputPath + "/" + appName + "/" + viewName + "Base.h")
@@ -328,9 +331,11 @@ def isGitRepo(path):
 """
 def searchReplaceInAllFoldersAndFiles(root, find, replace, FilePattern):
 	#print("Files to be changed:")
+	#print("find: ", find, "		replace: ", replace)
 	for path, dirs, files in os.walk(os.path.abspath(root)):
 		for filename in files:
 			if filename.endswith(FilePattern):
+				#print("				File: ", filename)
 				filepath = os.path.join(path, filename)
 				#print(filepath)
 				with open(filepath) as f:
@@ -345,7 +350,6 @@ def searchReplaceInAllFoldersAndFiles(root, find, replace, FilePattern):
 	subdirectories.
 """
 def renameFilesAndFolders(root, find, replace, appName):
-
 	#print("Root: " + root + " find: " + find + " replace: " + replace)
 	for path, dirs, files in os.walk(os.path.abspath(root)):
 		for dirNr in range(len(dirs)):
