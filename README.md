@@ -5,6 +5,16 @@ This is the bachelor thesis for Einar Johnsen and Christopher Dambakk, Universit
 
 **Tool usage documentation further down**
 
+Table of contents
+=============
+- [Primary goals](#primary-goals)
+- [Secondary goals](#secondary-goals)
+- [Tertiary goals](#tertiary-goals)
+- [Tool dependencies](#dependencies)
+- [Image Parser tool documentation](#)
+- [HTML generator tool documentation](#)
+- [iOS generator tool documentation](#the-ios-code-generator)
+
 Motivation
 ==========
 
