@@ -64,19 +64,51 @@ Tertiary goals
 
 # Tool usage
 
-Color codes and corresponding types
+Dependencies
 ===============
 
-| Color   	| HTML-tag 	| iOS-type 	| Android-type 	|
-|---------	|----------	|----------	|--------------	|
-| #15aaff 	| div    	| iOS-type 	| Java-type    	|
-| #fb0007 	| p      	| iOS-type 	| Java-type    	|
-| #ffff00 	| h1     	| iOS-type 	| Java-type    	|
-| #008000 	| img    	| iOS-type 	| Java-type    	|
+The tools use the following external libraries:
 
-Edit the imageParser/colorTypes.ini file to add your own colors and corresponding elements to be generated.
+### Image Parser:
+- argparse - https://docs.python.org/3/library/argparse.html
+- json - https://docs.python.org/3/library/json.html
+- PIL - https://pypi.python.org/pypi/PIL
+- colorama - https://pypi.python.org/pypi/colorama
+- configparser - https://docs.python.org/3/library/configparser.html
+- collections - https://docs.python.org/3/library/collections.html
+- time - https://docs.python.org/3/library/time.html
+- itemgetter ?
+- deepcopy ?
 
-**NB** There must be at least one white pixel between each element, unless the elements are nested.
+
+### HTML generation tool:
+- argparse - https://docs.python.org/3/library/argparse.html
+- json - https://docs.python.org/3/library/json.html
+- configparser - https://docs.python.org/3/library/configparser.html
+- collections - https://docs.python.org/3/library/collections.html
+- BeautifulSoup ver 4 - https://pypi.python.org/pypi/beautifulsoup4
+- pprint ?
+
+
+### iOS generation tool:
+- argparse - https://docs.python.org/3/library/argparse.html
+- colorama - https://pypi.python.org/pypi/colorama
+- configparser - https://docs.python.org/3/library/configparser.html
+- collections - https://docs.python.org/3/library/collections.html
+- json - https://docs.python.org/3/library/json.html
+- GitPython - https://pypi.python.org/pypi/GitPython/
+- re - https://docs.python.org/3/library/re.html Is this external or not?
+- readline - https://docs.python.org/3/library/readline.html
+- time - https://docs.python.org/3/library/time.html
+- glob - https://docs.python.org/3/library/glob.html
+- copy_tree distutils.dir_util - https://docs.python.org/3/library/distutils.html
+- shutil - https://docs.python.org/3/library/shutil.html
+- subprocess ?
+- fileinput ?
+- pprint ?
+
+
+
 
 The iOS code generator
 ===============
