@@ -25,8 +25,7 @@ def parseImage(path, outputPath, debug):
 	CompleteRGBDict = PixelSearcher(height, width, image)
 
 
-	if debug :
-		print("Done reading image")
+	if debug : print("Done reading image")
 
 	''' Creates the JSON objects without nesting and parents '''
 	internalList = createJSONObjects(CompleteRGBDict,image ,debug )
@@ -38,7 +37,7 @@ def parseImage(path, outputPath, debug):
 	completeListOrdered = createOrderedJSONStructure(unorderedList, debug)
 
 	''' Fixes the nested lists, changing the flat structure to the correct structure with nesting of child elements '''
-	nestedList = fixNesting(completeListOrdered)
+	nestedList = fixNesting(completeListOrdered, debug)
 
 	''' Writes the correct nested structure to the specified location '''
 	pathToJSON = writeToFile(outputPath, nestedList, image)
@@ -135,7 +134,6 @@ def ConvertToHex(rgbColor):
 	Based on the boxes it creates the JSON objects with different ID's. Correct nesting and parenting is not fixed here,
 	only the flat default structure is fixed here.
 """
-
 def createJSONObjects(CompleteRGBDict, image,debug=False):
 	objects = []
 	ListToSaveJSONObjects = []
@@ -178,31 +176,9 @@ def createJSONObjects(CompleteRGBDict, image,debug=False):
 	Go throug list and move childs to content of parent and return
 	the new, correctly nested list.
 """
-def fixNesting(elementsOrdered):
+def fixNesting(elementsOrdered, debug):
 	#tempList = deepcopy(elementsOrdered)
 	nestedList = OrderedDict()
-	"""
-	#Calculate relatice coordinates
-	for e in elementsOrdered.items():
-		#print(e)
-		print("ID: " + e[0])
-		parent = e[1]["parent"]
-
-		#tempList[e[0]] = e
-		#print("Temp list element before: ", tempList[e[0]])
-		#e[1]["x"] = 15
-		#print("Temp list element after: ", tempList[e[0]])
-		if parent is not -1:
-			tempList[e[0]]["x"] = e[1]["x"] - elementsOrdered[str(parent)]["x"]
-			tempList[e[0]]["y"] = e[1]["y"] - elementsOrdered[str(parent)]["y"]
-			#print("new element: ", tempList[e[0]])
-
-	print("Org list:")
-	print(elementsOrdered)
-	print()
-	print("Temp list: ")
-	print(tempList)
-	"""
 
 	#Connect those with parents by move references around
 	for e in elementsOrdered.items():
@@ -217,27 +193,15 @@ def fixNesting(elementsOrdered):
 
 			#Append element as child/content of parent:
 			elementsOrdered[str(parent)]["content"][size] = e
-			#print("element ", e[1]["id"], " is added as child of element ", parent)
 		elif parent is -1:
 			e[1]["relX"] = e[1]["x"]
 			e[1]["relY"] = e[1]["y"]
 
-	#print()
-	#print("Temp list: ")
-	#print(tempList)
-
-
 	#Move root elemets with nested elements to own list
 	for e in elementsOrdered.items():
 		parent = e[1]["parent"]
-		#print("Parent: ", parent)
 		if parent is -1:
 			nestedList[e[0]] = e
-			print(e[1]["id"], " has parent ", parent)
-
-	print()
-	print("nested list: ")
-	print(nestedList)
 
 	return nestedList
 
@@ -284,7 +248,7 @@ def findZValues(listToFindZValues):
 """
 def createOrderedJSONStructure(unorderedList, debug):
 	completeListOrdered = OrderedDict()
-	if debug: print(Fore.YELLOW+"Found following elements:"+Style.RESET_ALL)
+	if debug: print(Fore.BLUE + "Found following elements:"+Style.RESET_ALL)
 	for element in unorderedList:
 		data2 = OrderedDict()
 		data2['id'] = int(element[5])
@@ -303,7 +267,7 @@ def createOrderedJSONStructure(unorderedList, debug):
 		data2["content"] = OrderedDict()
 
 		completeListOrdered[element[5]] = data2
-		if debug: print('	element id:', data2['id'], '		(x,y): (', data2['x'], ',' ,data2['y'], ') 	(w,h): (', data2['width'], ',', data2['height'], ')	 color: ', data2['color'] )
+		if debug: print('*	element id:', data2['id'], '	parent id:', data2['parent'], '		(x,y): (', data2['x'], ',' ,data2['y'], ') 	(w,h): (', data2['width'], ',', data2['height'], ')	 color: ', data2['color'] )
 
 
 	return completeListOrdered
@@ -326,7 +290,7 @@ def writeToFile(outputPath, completeList, image):
 	meta["imageHeight"] = height
 	completeList["meta"] = meta
 
-	json.dump(completeList, f)
+	json.dump(completeList, f, indent=4)
 	f.close()
 	return filePath
 
@@ -378,7 +342,6 @@ def findTheSquares(corners, squaresList, rgbColor, image):
 		Follows the hairline pixels, then gives the correct widht/height back.
 		Helper function to findTheSquares - special case hairline.
 """
-
 def findMaxAndMinHairLine(firstCorner, corners, rgbColor, image, firstColor, secondColor):
 
 	minX = firstCorner[1]
@@ -414,8 +377,6 @@ def findMaxAndMinHairLine(firstCorner, corners, rgbColor, image, firstColor, sec
 	Searches "around" the box to find the correct maximum and minimum values, the loop function
 	returns the max and minimum x and y values
 """
-
-
 def findMaximumAndMinimumValues(corners, firstCorner, rgbColor, image):
 	a,b,c = rgbColor
 	rgbColor = a,b,c,255
