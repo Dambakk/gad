@@ -27,13 +27,19 @@ OUTPUTPATH = ""
 VIEWS = []
 usingGit = False
 
-def copyProject(outputPath, debug, args, appName):
+"""
+	Main function
+"""
+def initProject(outputPath, debug, args, appName):
 	global VIEWS
 
+	'''Read config file'''
 	configSetup()
 	if debug: print("Config file loaded")
 
 	print("-"*20)
+
+	'''Checks if the project exists and checks whether a view should be changed or a new one added'''
 	if(os.path.exists(outputPath)):
 		if debug: print("Project already exists...")
 		VIEWS = [f for f in os.listdir(outputPath + "/" + appName + "/") if re.match("[a-zA-Z0-9]*Base.h", f)]
@@ -54,7 +60,7 @@ def copyProject(outputPath, debug, args, appName):
 			print(Fore.GREEN + "All good so far! " + Style.RESET_ALL + " File to be changed: " + Fore.CYAN + fileToBeChanged + Style.RESET_ALL)
 
 
-			# Finner ID'ene i ny og gammel JSON
+			'''Find the new IDs when comparing the old and new JSON'''
 			newJSON, newJSONList, newMeta = findIDJSON(args.jsonPath)
 			#print(newJSON, " test")
 
@@ -63,7 +69,7 @@ def copyProject(outputPath, debug, args, appName):
 			#print(oldJSON, " test1")
 
 
-			#Check for same image size and other requirements (e.g. that all project files are present...
+			'''Check for same image size and other requirements (e.g. that all project files are present...)'''
 			if oldMeta["imageWidth"] != newMeta["imageWidth"] or oldMeta["imageHeight"] != newMeta["imageHeight"]:
 				if args.force:
 					print(Fore.RED + "Warning! " + Fore.YELLOW + "The old and new image has not the same size."
@@ -77,33 +83,32 @@ def copyProject(outputPath, debug, args, appName):
 
 
 
-			# Lager en liste med ID'er som er annerledes, blir flere hvis det er flere her, blir tom hvis ikke.
+			'''Making a list with the new IDs'''
 			finalJSONID = []
 			for i in newJSON:
 				if(i not in oldJSON):
 					 finalJSONID.append(i)
 
-			# Henter ut en flat struktur, så hvert JSON object kan hentes ut fra en liste, så man slipper reqursion for å hente ut.
+			'''Saving JSON objects as a flat structure for new JSON structure'''
 			newFlatJSONList = []
 			for x in newJSONList.items():
 				if x[0] != "meta":
 					readElementForNewListe(x[1][1], newFlatJSONList)
 
-			# Gjør samme med gammel JSON struktur
+			'''Saving JSON objects as a flat structure for old JSON structure'''
 			oldFlatJSONList = []
 			for y in oldJSONList.items():
 				if y[0] != "meta":
 					readElementForNewListe(y[1][1], oldFlatJSONList)
 
-			#Funksjon for å sjekke om vi har riktige ID'er
-			checkIfCorrectID(newFlatJSONList, oldFlatJSONList, finalJSONID)
+			'Checks if the IDs are correct. The update view function'
+			checkIfCorrectID(newFlatJSONList, oldFlatJSONList, finalJSONID, args.threshold)
 
-
+			'Update the JSON file saved to be the new structure genrated'
 			updatedJSON = regenerateJSON(newFlatJSONList)
 
-			#print(updatedJSON)
 
-			#Kopiere mal til ny dest.
+			'Copy a new view, which is going to be the updated to new dest'
 			copy("DemoApp/DemoApp/ViewControllerBase.m", outputPath + "/" + appName + "/")
 			copy("DemoApp/DemoApp/ViewControllerBase.h", outputPath + "/" + appName + "/")
 			copy("DemoApp/DemoApp/ViewController.m", outputPath + "/" + appName + "/")
@@ -126,7 +131,7 @@ def copyProject(outputPath, debug, args, appName):
 
 			writeJSONToFile(outputPath, updatedJSON, newMeta, fileToBeChanged[:-4])
 
-			#Is a git repo?
+			'Checks if it is a git repo'
 			if isGitRepo(outputPath):
 				print(Fore.YELLOW + "Detects a git repo!" + Style.RESET_ALL)
 				a = input( "Do you want to commit the changes? (Y/N) ")
@@ -141,11 +146,11 @@ def copyProject(outputPath, debug, args, appName):
 				else:
 					print("No commit. Continuing...")
 
-		elif res == "2": # ADD NEW VIEW TO PROJECT
+		elif res == "2":
 			print("Adding view to the existing project...")
 			viewName = input("Enter a name for the new view: ")
 
-			#Kopiere mal til ny dest.
+			'Copy new view to new dest'
 			copy("DemoApp/DemoApp/ViewControllerBase.m", outputPath + "/" + appName + "/")
 			copy("DemoApp/DemoApp/ViewControllerBase.h", outputPath + "/" + appName + "/")
 			copy("DemoApp/DemoApp/ViewController.m", outputPath + "/" + appName + "/")
@@ -166,11 +171,13 @@ def copyProject(outputPath, debug, args, appName):
 				except ValueError:
 					print(Fore.RED + "Something went wrong. Could not read JSON. Is the JSON structure correct?" + Style.RESET_ALL)
 					return
+				'Generates the code from the given JSON structure'
 				iterateJSONAndGenerateCode(data, outputPath, viewName, appName, debug)
 
+				'Writes the JSON to a file, so a view can be updated later'
 				writeJSONToFile(outputPath, data, data["meta"], viewName)
 
-			#Is a git repo?
+			'Is a git repo?'
 			if isGitRepo(outputPath):
 				print(Fore.YELLOW + "Detects a git repo!" + Style.RESET_ALL)
 				a = input( "Do you want to commit the changes? (Y/N) ")
@@ -185,11 +192,12 @@ def copyProject(outputPath, debug, args, appName):
 				else:
 					print("No commit. Continuing...")
 
-	else: #CREATING A NEW APP
+	else:
 		print("Creating a new app...")
 		print("OutputPath: " + outputPath)
 		print("AppName: " + appName)
 
+		'Copies the '
 		copy_tree("DemoApp", outputPath)
 		answer = input("Do you want to initalize this app with git? (Y/N): ")
 		while answer not in {"Y", "N"} : answer = input("Do you want to initalize this app with git? (Y/N): ")
@@ -204,6 +212,7 @@ def copyProject(outputPath, debug, args, appName):
 
 		#TODO: Add some form of checking on the name for any invalid input?
 
+		'Replacs all the old appname with the new appname'
 		searchReplaceInAllFoldersAndFiles(outputPath, "DemoApp", appName, (".txt", ".pbxproj", "DemoAppTests.m", "DemoAppUITests.m", "contents.xcworkspacedata", "AppDelegate.m"))
 		searchReplaceInAllFoldersAndFiles(outputPath, "viewname", viewName, ("AppDelegate.m"))
 		renameFilesAndFolders(outputPath, "DemoApp", outputPath, appName)
@@ -218,6 +227,8 @@ def copyProject(outputPath, debug, args, appName):
 		prepareFiles(outputPath, viewName, "m", appName)
 		prepareFiles(outputPath, viewName, "h", appName)
 
+		'Reads the JOSN and generates the Code '
+		#TODO Create function+?
 		with open(args.jsonPath) as data_file:
 			data = OrderedDict()
 			try:
@@ -229,7 +240,7 @@ def copyProject(outputPath, debug, args, appName):
 
 			writeJSONToFile(outputPath, data, data["meta"], viewName)
 
-
+			'Add git functionality'
 		if usingGit:
 			git = Git(os.path.abspath(outputPath))
 			git.add("-A") #Add all
@@ -246,7 +257,7 @@ def copyProject(outputPath, debug, args, appName):
 
 	print(Fore.GREEN + "iOS generator done" + Fore.RESET)
 
-
+'Tab completion'
 def completer(text, state):
 	files = [f[:-2] for f in VIEWS if f.startswith(text)]
 	if state < len(files):
@@ -254,7 +265,7 @@ def completer(text, state):
 	else:
 		return None
 
-
+'Regenerates the flat JSON structure back to the nested version'
 def regenerateJSON(oldList):
 
 	#Create a flat, ordered structure
@@ -294,7 +305,7 @@ def regenerateJSON(oldList):
 
 	return nestedList
 
-
+'Iterates the JSON and generates the code'
 def iterateJSONAndGenerateCode(data, outputPath, viewName, appName, debug):
 	newListeM = []
 	newListeH = []
@@ -313,7 +324,7 @@ def iterateJSONAndGenerateCode(data, outputPath, viewName, appName, debug):
 	replaceText(outputPath, "h", viewName, newListeH, None, appName)
 
 
-
+'Checks if it is a git repo'
 def isGitRepo(path):
 	g = Git(os.path.abspath(path))
 	try:
@@ -363,7 +374,9 @@ def renameFilesAndFolders(root, find, replace, appName):
 			if filenameNew != filename:
 				os.rename(os.path.join(path, filename), os.path.join(path, filenameNew))
 
-
+"""
+	Selects the view file, which is supposed to be changed
+"""
 
 def selectViewFile(outputPath, appName, debug):
 	readline.parse_and_bind("tab: complete")
@@ -412,13 +425,19 @@ def writeJSONToFile(outputPath, completeList, meta, viewName):
 	f.close()
 	return filePath
 
-
-def checkIfCorrectID(newJSON, oldJSON, finalJSONID):
+"""
+	Checks if the elements in the old and new JSON are the same.
+"""
+def checkIfCorrectID(newJSON, oldJSON, finalJSONID, threshold):
 	print(newJSON)
 	print(" ")
 	print(oldJSON)
 	print(" ")
 	print(finalJSONID)
+	threshold = threshold/100
+	print(threshold)
+
+
 	try:
 		counter = max(finalJSONID)+1
 	except:
@@ -443,7 +462,7 @@ def checkIfCorrectID(newJSON, oldJSON, finalJSONID):
 				tempListe.append(j)
 
 		if tempListe:
-			match = percentageMatch(tempListe, i)
+			match = percentageMatch(tempListe, i, threshold)
 
 			try:
 				i[0] = match[0]
@@ -461,9 +480,13 @@ def checkIfCorrectID(newJSON, oldJSON, finalJSONID):
 
 	print(newJSON)
 
-def percentageMatch(tempListe, elementToCheck):
+
+"""
+	Generates a percentage match on elements, and set the old ID to the new element if it is the same
+"""
+def percentageMatch(tempListe, elementToCheck, THRESHOLD):
 	NUMBER = 250
-	TRESHOLD = 0.1
+
 	for currentElement in tempListe:
 		print(currentElement, " ---------------------------")
 		print(elementToCheck)
@@ -484,7 +507,9 @@ def percentageMatch(tempListe, elementToCheck):
 	else:
 		return None
 
-
+"""
+	Ehm.. dunno
+"""
 def findIDJSON(filepath):
 	test = []
 	newData = []
@@ -505,11 +530,17 @@ def findIDJSON(filepath):
 
 	return test, data, meta
 
+"""
+	Initializes the config file containing the user defined elements
+"""
 def configSetup():
 	Config = configparser.RawConfigParser()
 	Config.read("colorTypes.ini")
 	readConfigFile(Config)
 
+"""
+	Reads the config file
+"""
 def readConfigFile(config):
 	options1 = config.options("implementationsFields")
 	for option in options1:
@@ -527,11 +558,17 @@ def readConfigFile(config):
 
 
 #Return (red, green, blue) for the color given as #rrggbb.
+"""
+	Converts hex to rgb
+"""
 def hex_to_rgb(value):
 	value = value.lstrip('#')
 	lv = len(value)
 	return tuple(int(value[i:i + lv // 3], 16) for i in range(0, lv, lv // 3))
 
+"""
+	Saves the correct main elements to the main file
+"""
 def saveIOSobjectM(color, elementId, posX, posY, width, height, liste, newListeM):
 	if(color in liste):
 		name = liste[color][0][0] + str(elementId)
@@ -556,14 +593,18 @@ def saveIOSobjectM(color, elementId, posX, posY, width, height, liste, newListeM
 	else:
 		print(Fore.RED + color + " - is not a valid color and will be ignored" + Style.RESET_ALL
 			+"\n\tRead the documentation to add your own colors and corresponding elements.")
-
+"""
+	Saves the correct code to the header file
+"""
 def saveIOSobjectH(color, elementId, listenH, newListeH):
 	if(color in listenH):
 		name = listenH[color][0][0] + str(elementId)
 		headerElement = listenH[color][1][0]
 		newItem = str(headerElement).replace("NAME", str(name))
 		newListeH.append(newItem)
-
+"""
+	Saves the correct adding code to the main file
+"""
 def saveIOSobjectMP(newListeMP, parentColor, elementId, parent, listenMP, color):
 	if(parent != -1):
 		if(color in listenMP):
@@ -583,6 +624,7 @@ def saveIOSobjectMP(newListeMP, parentColor, elementId, parent, listenMP, color)
 			if("NAME" in item[0]):
 				newItem = str(item[0]).replace("NAME", str(name))
 			newListeMP.append(newItem)
+
 
 def readElementForNewListe(element, newListe):
 		elementId = element['id']
@@ -698,10 +740,16 @@ def replaceText(templatePath, fileType, filename, elements, elements2, appName):
 	#if(os.path.exists(templatePath + '/NewFile.txt')):
 	os.remove(templatePath + '/NewFile.txt')
 
+"""
+	If the project is used as a module, it set the input parameters to the CLI tool.
+	It then run the main iOS function.
+"""
+
 if __name__== "__main__":
 	ap = argparse.ArgumentParser()
 	ap.add_argument("jsonPath", help="Path to JSON structure") #NB! Vi kan også bruke styles her! :)
 	ap.add_argument("outputPath", help="Output directory")
+	ap.add_argument("-t","--threshold", help="Defined threshold for view update",nargs='?',type=int, default=15)
 	ap.add_argument("-v", "--verbose", help="Verbose output", action="store_true", default=False)
 	ap.add_argument("-f", "--force", help="Force continue. May result in overwrite and unexpected results.", action="store_true", default=False)
 	args = ap.parse_args()
@@ -710,4 +758,4 @@ if __name__== "__main__":
 	print("OUTPUT: " + args.outputPath)
 	print("APP NAME: " + appName)
 
-	copyProject(args.outputPath, args.verbose, args, appName)
+	initProject(args.outputPath, args.verbose, args, appName)
