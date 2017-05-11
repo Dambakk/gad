@@ -21,11 +21,14 @@ Christopher Dambakk
 Table of contents
 =============
 - [Introduction](#introduction)
-- [Primary goals](#primary-goals)
-- [Secondary goals](#secondary-goals)
-- [Tertiary goals](#tertiary-goals)
+	- [Primary goals](#primary-goals)
+	- [Secondary goals](#secondary-goals)
+	- [Tertiary goals](#tertiary-goals)
 - [Tool usage documentation](#tool-usage-documentation)
 	- [Tool dependencies](#dependencies)
+	- [The input image](#the-input-image)
+	- [The JSON structure](#the-json-structure)
+	- [The configuration file](#the-configuration-file)
 	- [Image Parser tool documentation](#the-image-parser)
 	- [HTML generator tool documentation](#the-html-generator)
 	- [iOS generator tool documentation](#the-ios-generator)
@@ -129,10 +132,7 @@ The tools use the following external libraries:
 - pprint ?
 
 
-
-## The Image Parser
-
-### The input image
+## The input image
 
 The input image must be standardized for the parser to understand it. Follow these rules:
 
@@ -143,18 +143,102 @@ The input image must be standardized for the parser to understand it. Follow the
 
 Image (4) is an example of how the input image might look like. 
 
-![Example image](RealWorldExample2.1.png)  
+![Example image](RealWorldExample2.1.png) 
+
+
+## The JSON structure
+
+The created JSON structure is a list of elements where an element is a list with attributes. An example element can look like this:
+
+```javascript
+{
+	"id": 0, 
+	"parent": -1, 
+	"parentColor": "", 
+	"color": "#c80005", 
+	"x": 24, 
+	"y": 23, 
+	"relX": 24, 
+	"relY": 23, 
+	"width": 117, 
+	"height": 98, 
+	"content": {}
+}
+```
+
+Take a look at the [demo-file](demo.json) for a complete example. That is the JSON structure for [this image](demo.png).
+
+
+
+
+## The configuration file
+
+The configuration file containts generic description of all graphical components. These will be used to replace the colored rectangles in the images. 
+
+### Configuration in HTML
+
+The configuration file in HTML is simple. Here is a example that defines the div-tag in html:
+
+```html
+[tags]
+0000ff:div
+
+[html-elements]
+0000ff : <div class="CSSCLASS">CONTENT</div>
+```
+
+This assigns the collor #0000ff to the div tag. The CSSCLASS and CONTENT will be replaced with the corresponding CSS-class created and child elements of the div, if any. 
+
+### Configuration in iOS
+
+The configuration file in iOS is a bit more complex due to the more complex file structure than HTML. Consider this example:
+
+```
+[implementationsFields]
+c80005 : [["view"],["self.NAME = [[UIView alloc] initWithFrame:CGRectMake(POSX, POSY, WIDTH, HEIGHT)];"], ["self.NAME.backgroundColor = [UIColor COLOR];"]]
+
+[addingFields]
+default : ["[self.view addSubview:self.NAME];"]
+
+[headerFields]
+c80005 : [["view"], ["@property (nonatomic, strong) UIView *NAME;"]]
+```
+
+This is how the view component is defined. Each element needs the "implementation"- "adding"-, and "header"-part. 
+
+
+## The Image Parser
+
+To run the Image Parser, open a console and enter the following:
+
+`python3 PATH_TO_PARSER/imageParser.py PATH_TO_IMAGE PATH_TO_OUTPUT`
+
+where
+
+- `PATH_TO_PARSER` is the location of the Image Parser on your computer
+- `PATH_TO_IMAGE` is the complete filepath to the image you want to convert to JSON
+- `PATH_TO_OUTPUT` is the path to the desired location for the output JSON file representing the view.
+
+You can also add the verbose flag ( `-v` eller `--verbose`) for more verbose feedback to the console.
 
 
 ## The HTML generator
 
+To run the HTML generation tool, open a console and enter the following:
+
+`python3 PATH_TO_HTMLGEN/htmlGenerator.py PATH_TO_JSON TITLE PATH_TO_OUTPUT`
+
+where
+
+- `PATH_TO_HTMLGEN` is the location of the HTML generator on your computer.
+- `PATH_TO_JSON` is the complete filepath to the JSON file containing the description of the view. This JSON file will typically be the output of the Image Parser-tool. E.g. `/home/username/documents/myFirstView.json`
+- `TITLE` is the title of the web page
+- PATH_TO_OUTPUT` is the path to the desired location for the generated HTML and CSS file
 
 ## The iOS generator
 
 
-### Running the generator:
-
-To run the iOSGenerator open a console and enter the following:
+To run the iOS generator open a console and enter the following:
 `python3 PATH_TO_IOSGEN/iosgenerator.py PATH_TO_JSON PATH_TO_OUTPUT`
 where
 - `PATH_TO_IOSGEN` is the location of the iosgenerator on your computer.
@@ -162,7 +246,7 @@ where
 - `PATH_TO_OUTPUT` is the path to desired place to put the created project or the path to the project to be updated. The last directory will be the folder containing the app and will be the name of the app. E.g. `/home/dev/apps/MyFirstApp` where MyFirstApp is the name of the app.
 
 You can also add one or more of the following flags:
-- `-v` for a more verbose output logging to the console.
+- `-v` for more verbose output logging to the console.
 - `-f` is the force flag to make the script continue even if it may cause unexpected behaviour and results. Without the flag, the program will stop and tell the user to add the flag if it encounter any problems.
 
 The script will ask for input during runtime, such as enter a name for the view, select a view or commit changes using git.

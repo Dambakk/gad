@@ -4,6 +4,7 @@
 *.DS_Store
 *.png
 !RealWorldExample2.1.png
+!demo.png
 __pycache__
 Output
 */output*
