@@ -132,6 +132,18 @@ The tools use the following external libraries:
 
 ## The Image Parser
 
+### The input image
+
+The input image must be standardized for the parser to understand it. Follow these rules:
+
+- Must be a png file.
+- Anti aliasing must be turned off when designing the image.
+- For a best possible result, match the image size with the size of the desired result.
+- Colored rectangles represent the different graphical components. Each color represent a kind of component.
+
+Image (4) is an example of how the input image might look like. 
+
+![Example image](RealWorldExample2.1.png)  
 
 
 ## The HTML generator
@@ -140,8 +152,8 @@ The tools use the following external libraries:
 ## The iOS generator
 
 
-Running the generator:
--------------
+### Running the generator:
+
 To run the iOSGenerator open a console and enter the following:
 `python3 PATH_TO_IOSGEN/iosgenerator.py PATH_TO_JSON PATH_TO_OUTPUT`
 where

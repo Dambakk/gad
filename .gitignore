@@ -1,8 +1,9 @@
-# Ignore the following file types
+# Ignore the following files
 *.txt
 !*html_template.txt
 *.DS_Store
 *.png
+!RealWorldExample2.1.png
 __pycache__
 Output
 */output*
