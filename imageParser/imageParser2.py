@@ -400,8 +400,8 @@ def findMaximumAndMinimumValues(corners, firstCorner, rgbColor, image):
 			yValue = firstCorner[0]
 			maxX += 1
 
-
 	while(xValue != firstCorner[1] or yValue != firstCorner[0]):
+
 		testValue = [yValue, xValue]
 		for value in corners:
 			if(testValue == value):

@@ -16,6 +16,7 @@ import glob
 import time
 import subprocess
 import readline
+import rlcompleter
 from git import *
 import sys
 
@@ -62,11 +63,9 @@ def initProject(outputPath, debug, args, appName):
 
 			'''Find the new IDs when comparing the old and new JSON'''
 			newJSON, newJSONList, newMeta = findIDJSON(args.jsonPath)
-			#print(newJSON, " test")
 
 			oldJSONPath = outputPath+ "/json/" + fileToBeChanged[:-4] + ".json"
 			oldJSON, oldJSONList, oldMeta = findIDJSON(oldJSONPath)
-			#print(oldJSON, " test1")
 
 
 			'''Check for same image size and other requirements (e.g. that all project files are present...)'''
@@ -131,7 +130,7 @@ def initProject(outputPath, debug, args, appName):
 
 			writeJSONToFile(outputPath, updatedJSON, newMeta, fileToBeChanged[:-4])
 
-			'Checks if it is a git repo'
+			#Checks if it is a git repo
 			if isGitRepo(outputPath):
 				print(Fore.YELLOW + "Detects a git repo!" + Style.RESET_ALL)
 				a = input( "Do you want to commit the changes? (Y/N) ")
@@ -150,7 +149,7 @@ def initProject(outputPath, debug, args, appName):
 			print("Adding view to the existing project...")
 			viewName = input("Enter a name for the new view: ")
 
-			'Copy new view to new dest'
+			#Copy new view to new dest
 			copy("DemoApp/DemoApp/ViewControllerBase.m", outputPath + "/" + appName + "/")
 			copy("DemoApp/DemoApp/ViewControllerBase.h", outputPath + "/" + appName + "/")
 			copy("DemoApp/DemoApp/ViewController.m", outputPath + "/" + appName + "/")
@@ -171,13 +170,13 @@ def initProject(outputPath, debug, args, appName):
 				except ValueError:
 					print(Fore.RED + "Something went wrong. Could not read JSON. Is the JSON structure correct?" + Style.RESET_ALL)
 					return
-				'Generates the code from the given JSON structure'
+				#Generates the code from the given JSON structure
 				iterateJSONAndGenerateCode(data, outputPath, viewName, appName, debug)
 
 				'Writes the JSON to a file, so a view can be updated later'
 				writeJSONToFile(outputPath, data, data["meta"], viewName)
 
-			'Is a git repo?'
+			#Is a git repo?
 			if isGitRepo(outputPath):
 				print(Fore.YELLOW + "Detects a git repo!" + Style.RESET_ALL)
 				a = input( "Do you want to commit the changes? (Y/N) ")
@@ -197,7 +196,7 @@ def initProject(outputPath, debug, args, appName):
 		print("OutputPath: " + outputPath)
 		print("AppName: " + appName)
 
-		'Copies the '
+		#Copies the template project
 		copy_tree("DemoApp", outputPath)
 		answer = input("Do you want to initalize this app with git? (Y/N): ")
 		while answer not in {"Y", "N"} : answer = input("Do you want to initalize this app with git? (Y/N): ")
@@ -212,7 +211,7 @@ def initProject(outputPath, debug, args, appName):
 
 		#TODO: Add some form of checking on the name for any invalid input?
 
-		'Replacs all the old appname with the new appname'
+		#Replacs all the old appname with the new appname
 		searchReplaceInAllFoldersAndFiles(outputPath, "DemoApp", appName, (".txt", ".pbxproj", "DemoAppTests.m", "DemoAppUITests.m", "contents.xcworkspacedata", "AppDelegate.m"))
 		searchReplaceInAllFoldersAndFiles(outputPath, "viewname", viewName, ("AppDelegate.m"))
 		renameFilesAndFolders(outputPath, "DemoApp", outputPath, appName)
@@ -227,8 +226,7 @@ def initProject(outputPath, debug, args, appName):
 		prepareFiles(outputPath, viewName, "m", appName)
 		prepareFiles(outputPath, viewName, "h", appName)
 
-		'Reads the JOSN and generates the Code '
-		#TODO Create function+?
+		#Reads the JOSN and generates the Code
 		with open(args.jsonPath) as data_file:
 			data = OrderedDict()
 			try:
@@ -240,7 +238,7 @@ def initProject(outputPath, debug, args, appName):
 
 			writeJSONToFile(outputPath, data, data["meta"], viewName)
 
-			'Add git functionality'
+		#Add git functionality
 		if usingGit:
 			git = Git(os.path.abspath(outputPath))
 			git.add("-A") #Add all
@@ -249,15 +247,10 @@ def initProject(outputPath, debug, args, appName):
 			print(Fore.YELLOW + "Commit short hash: \t" + Style.RESET_ALL + git.log("--pretty=format:'%h'", "-n", 1))
 			print(Fore.YELLOW + "Commit message:    \t" + Style.RESET_ALL + git.log(-1, "--pretty=%B")) #show last commit message
 
-	#På utsiden av den store if'en. Her er "Felles"-delen
-	#newName = input("Enter app name:")
-	#searchReplaceInAllFoldersAndFiles(outputPath, "DemoApp", outputPath, (".txt", ".pbxproj", "DemoAppTests.m", "DemoAppUITests.m", "contents.xcworkspacedata"))
-
-	#renameFilesAndFolders(outputPath, "DemoApp", outputPath)
-
 	print(Fore.GREEN + "iOS generator done" + Fore.RESET)
-
-'Tab completion'
+"""
+	Tab completion
+"""
 def completer(text, state):
 	files = [f[:-2] for f in VIEWS if f.startswith(text)]
 	if state < len(files):
@@ -265,9 +258,10 @@ def completer(text, state):
 	else:
 		return None
 
-'Regenerates the flat JSON structure back to the nested version'
+"""
+	Regenerates the flat JSON structure back to the nested version
+"""
 def regenerateJSON(oldList):
-
 	#Create a flat, ordered structure
 	newFlatJson = OrderedDict()
 	for element in oldList:
@@ -305,7 +299,9 @@ def regenerateJSON(oldList):
 
 	return nestedList
 
-'Iterates the JSON and generates the code'
+"""
+	Iterates the JSON and generates the code'
+"""
 def iterateJSONAndGenerateCode(data, outputPath, viewName, appName, debug):
 	newListeM = []
 	newListeH = []
@@ -316,15 +312,12 @@ def iterateJSONAndGenerateCode(data, outputPath, viewName, appName, debug):
 			readElement(e[1][1], newListeM, newListeH, newListeMP)
 	if debug: print("Done parsing the JSON elements")
 
-	#print(" ")
-	#print(newListeM, "is the list")
-	#print(" ")
-
 	replaceText(outputPath, "m", viewName, newListeM, newListeMP, appName)
 	replaceText(outputPath, "h", viewName, newListeH, None, appName)
 
-
-'Checks if it is a git repo'
+"""
+	Checks if it is a git repo
+"""
 def isGitRepo(path):
 	g = Git(os.path.abspath(path))
 	try:
@@ -341,14 +334,10 @@ def isGitRepo(path):
 	the file pattern.
 """
 def searchReplaceInAllFoldersAndFiles(root, find, replace, FilePattern):
-	#print("Files to be changed:")
-	#print("find: ", find, "		replace: ", replace)
 	for path, dirs, files in os.walk(os.path.abspath(root)):
 		for filename in files:
 			if filename.endswith(FilePattern):
-				#print("				File: ", filename)
 				filepath = os.path.join(path, filename)
-				#print(filepath)
 				with open(filepath) as f:
 					s = f.read()
 				s = s.replace(find, replace)
@@ -361,7 +350,6 @@ def searchReplaceInAllFoldersAndFiles(root, find, replace, FilePattern):
 	subdirectories.
 """
 def renameFilesAndFolders(root, find, replace, appName):
-	#print("Root: " + root + " find: " + find + " replace: " + replace)
 	for path, dirs, files in os.walk(os.path.abspath(root)):
 		for dirNr in range(len(dirs)):
 			dirOld = appName + "/" + dirs[dirNr]
@@ -377,9 +365,11 @@ def renameFilesAndFolders(root, find, replace, appName):
 """
 	Selects the view file, which is supposed to be changed
 """
-
 def selectViewFile(outputPath, appName, debug):
-	readline.parse_and_bind("tab: complete")
+	if 'libedit' in readline.__doc__:
+		readline.parse_and_bind("bind ^I rl_complete")
+	else:
+		readline.parse_and_bind("tab: complete")
 	readline.set_completer(completer)
 
 	#Get the name of the view to be changed
@@ -409,9 +399,6 @@ def selectViewFile(outputPath, appName, debug):
 	Write the ordered list to file in a JSON structure
 """
 def writeJSONToFile(outputPath, completeList, meta, viewName):
-
-	#print(completeList)
-
 	filePath = outputPath+"/json/"+viewName+".json"
 	if not os.path.exists(outputPath):
 		os.makedirs(outputPath)
@@ -429,14 +416,7 @@ def writeJSONToFile(outputPath, completeList, meta, viewName):
 	Checks if the elements in the old and new JSON are the same.
 """
 def checkIfCorrectID(newJSON, oldJSON, finalJSONID, threshold):
-	print(newJSON)
-	print(" ")
-	print(oldJSON)
-	print(" ")
-	print(finalJSONID)
 	threshold = threshold/100
-	print(threshold)
-
 
 	try:
 		counter = max(finalJSONID)+1
@@ -471,14 +451,8 @@ def checkIfCorrectID(newJSON, oldJSON, finalJSONID, threshold):
 				i[0] = counter
 				counter += 1
 		elif finalJSONID and isBreak == False:
-			#print("We came here")
 			i[0] = finalJSONID.pop(0)
 
-
-		print(tempListe)
-
-
-	print(newJSON)
 
 
 """
@@ -488,27 +462,19 @@ def percentageMatch(tempListe, elementToCheck, THRESHOLD):
 	NUMBER = 250
 
 	for currentElement in tempListe:
-		print(currentElement, " ---------------------------")
-		print(elementToCheck)
 		percentage = abs((currentElement[2]-elementToCheck[2])/NUMBER) + abs((currentElement[3]-elementToCheck[3])/NUMBER) + abs((currentElement[6]-elementToCheck[6])/NUMBER) + abs((currentElement[7]-elementToCheck[7])/NUMBER)
 		currentElement.append(percentage)
-		print(currentElement)
 
 	tempListe.sort(key=lambda x: x[8])
 
-	#print(tempListe)
-
 	if(tempListe[0][10] < TRESHOLD):
-		print("came here")
-		print(tempListe[0][8])
 		del tempListe[0][-1]
-		#print(tempListe[0])
 		return tempListe[0]
 	else:
 		return None
 
 """
-	Ehm.. dunno
+	Parses JSON structure
 """
 def findIDJSON(filepath):
 	test = []
@@ -522,12 +488,9 @@ def findIDJSON(filepath):
 			return
 
 		meta = data["meta"]
-		#print("META: ", meta)
 		for e in data.items():
 			if e[0] != "meta":
 				readElementForID(e[1][1], test)
-
-
 	return test, data, meta
 
 """
@@ -557,7 +520,6 @@ def readConfigFile(config):
 		listenH["#" + option] = eval(config.get("headerFields", option))
 
 
-#Return (red, green, blue) for the color given as #rrggbb.
 """
 	Converts hex to rgb
 """
@@ -591,7 +553,7 @@ def saveIOSobjectM(color, elementId, posX, posY, width, height, liste, newListeM
 				newItem = str(newItem).replace("COLOR", rgbColor)
 			newListeM.append(newItem)
 	else:
-		print(Fore.RED + color + " - is not a valid color and will be ignored" + Style.RESET_ALL
+		print(Fore.RED + color + " - is not a valid color and object will be ignored" + Style.RESET_ALL
 			+"\n\tRead the documentation to add your own colors and corresponding elements.")
 """
 	Saves the correct code to the header file
@@ -737,14 +699,12 @@ def replaceText(templatePath, fileType, filename, elements, elements2, appName):
 	file3.close()
 	file4.close()
 
-	#if(os.path.exists(templatePath + '/NewFile.txt')):
 	os.remove(templatePath + '/NewFile.txt')
 
 """
 	If the project is used as a module, it set the input parameters to the CLI tool.
 	It then run the main iOS function.
 """
-
 if __name__== "__main__":
 	ap = argparse.ArgumentParser()
 	ap.add_argument("jsonPath", help="Path to JSON structure") #NB! Vi kan også bruke styles her! :)
