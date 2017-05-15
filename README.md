@@ -32,6 +32,7 @@ Table of contents
 	- [Image Parser tool documentation](#the-image-parser)
 	- [HTML generator tool documentation](#the-html-generator)
 	- [iOS generator tool documentation](#the-ios-generator)
+		- [Problems with Xcode](#run-the-app-with-xcode)
 
 
 Introduction
@@ -235,8 +236,9 @@ where
 - `TITLE` is the title of the web page
 - PATH_TO_OUTPUT` is the path to the desired location for the generated HTML and CSS file
 
-## The iOS generator
 
+
+## The iOS generator
 
 To run the iOS generator open a console and enter the following:
 `python3 PATH_TO_IOSGEN/iosgenerator.py PATH_TO_JSON PATH_TO_OUTPUT`
@@ -251,3 +253,15 @@ You can also add one or more of the following flags:
 
 The script will ask for input during runtime, such as enter a name for the view, select a view or commit changes using git.
 For further help, use `--help` or `-h` when running the tool.
+
+### Run the app with Xcode
+
+To be able to view the files in Xcode you must follow these steps:
+
+- In the file structure overview in Xcode, delete the ViewController- and ViewControllerBase files.
+- Add the newly created views by clicking "File" >> "Add files to ..." >> Select the newly created files >> "Add"
+
+
+If you cannot build the application, follow these steps:
+
+"Product" >> "Scheme" >> "Edit Scheme" >> Executable: ProjectName.app
