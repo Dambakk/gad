@@ -10,7 +10,7 @@ Christopher Dambakk
 
 **Supervisor:**
 
-[Morten Goodwin](http://www.mortengoodwin.net/)
+[Morten Goodwin, Ph.D.](http://www.mortengoodwin.net/)
 
 **Contractor:**
 
@@ -32,7 +32,7 @@ Table of contents
 	- [Image Parser tool documentation](#the-image-parser)
 	- [HTML generator tool documentation](#the-html-generator)
 	- [iOS generator tool documentation](#the-ios-generator)
-		- [Problems with Xcode](#run-the-app-with-xcode)
+		- [Xcode hacks](#run-the-app-with-xcode)
 
 
 Introduction
@@ -102,8 +102,6 @@ The tools use the following external libraries:
 - configparser - https://docs.python.org/3/library/configparser.html
 - collections - https://docs.python.org/3/library/collections.html
 - time - https://docs.python.org/3/library/time.html
-- itemgetter ?
-- deepcopy ?
 
 
 ### HTML generation tool:
@@ -112,7 +110,6 @@ The tools use the following external libraries:
 - configparser - https://docs.python.org/3/library/configparser.html
 - collections - https://docs.python.org/3/library/collections.html
 - BeautifulSoup ver 4 - https://pypi.python.org/pypi/beautifulsoup4
-- pprint ?
 
 
 ### iOS generation tool:
@@ -128,9 +125,7 @@ The tools use the following external libraries:
 - glob - https://docs.python.org/3/library/glob.html
 - copy_tree distutils.dir_util - https://docs.python.org/3/library/distutils.html
 - shutil - https://docs.python.org/3/library/shutil.html
-- subprocess ?
-- fileinput ?
-- pprint ?
+
 
 
 ## The input image
@@ -157,9 +152,9 @@ The created JSON structure is a list of elements where an element is a list with
 	"parent": -1, 
 	"parentColor": "", 
 	"color": "#c80005", 
-	"x": 24, 
+	"x": 69, 
 	"y": 23, 
-	"relX": 24, 
+	"relX": 69, 
 	"relY": 23, 
 	"width": 117, 
 	"height": 98, 
