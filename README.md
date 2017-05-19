@@ -135,7 +135,7 @@ The input image must be standardized for the parser to understand it. Follow the
 - Must be a png file.
 - Anti aliasing must be turned off when designing the image.
 - For a best possible result, match the image size with the size of the desired result.
-- Colored rectangles represent the different graphical components. Each color represent a kind of component.
+- Colored rectangles represent the different graphical components. Each color represent a component.
 
 Image (4) is an example of how the input image might look like. 
 
@@ -174,7 +174,7 @@ The configuration file containts generic description of all graphical components
 ### Configuration in HTML
 
 The configuration file in HTML is simple. Here is a example that defines the div-tag in html:
-
+ 
 ```html
 [tags]
 0000ff:div
@@ -200,7 +200,7 @@ default : ["[self.view addSubview:self.NAME];"]
 c80005 : [["view"], ["@property (nonatomic, strong) UIView *NAME;"]]
 ```
 
-This is how the view component is defined. Each element needs the "implementation"- "adding"-, and "header"-part. 
+This is how the view component is defined. Each element needs the "implementation"- "adding"-, and "header"-part. Notice the "," after the implementationFields. It is supposed to be there, removing it will cause an error.
 
 
 ## The Image Parser
@@ -254,7 +254,7 @@ For further help, use `--help` or `-h` when running the tool.
 To be able to view the files in Xcode you must follow these steps:
 
 - In the file structure overview in Xcode, delete the ViewController- and ViewControllerBase files.
-- Add the newly created views by clicking "File" >> "Add files to ..." >> Select the newly created files >> "Add"
+- Add the newly created views by clicking "File" >> "Add files to ..." >> Select the newly created files >> "Add" >> Move "_Base" files to "Supporting Files", and the other two files to the ProjectName folder.
 
 
 If you cannot build the application, follow these steps:
