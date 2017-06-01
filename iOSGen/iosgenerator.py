@@ -4,7 +4,6 @@ import argparse
 from colorama import Fore, Back, Style
 from distutils.dir_util import copy_tree
 import re
-import fileinput
 from colorama import Fore, Back, Style
 from collections import OrderedDict
 import json
@@ -101,7 +100,8 @@ def initProject(outputPath, debug, args, appName):
 					readElementForNewListe(y[1][1], oldFlatJSONList)
 
 			'Checks if the IDs are correct. The update view function'
-			checkIfCorrectID(newFlatJSONList, oldFlatJSONList, finalJSONID, args.threshold)
+
+			checkIfCorrectID(newFlatJSONList, oldFlatJSONList, finalJSONID, args.threshold, oldMeta["imageWidth"], oldMeta["imageHeight"])
 
 			'Update the JSON file saved to be the new structure genrated'
 			updatedJSON = regenerateJSON(newFlatJSONList)
@@ -113,7 +113,8 @@ def initProject(outputPath, debug, args, appName):
 			copy("DemoApp/DemoApp/ViewController.m", outputPath + "/" + appName + "/")
 			copy("DemoApp/DemoApp/ViewController.h", outputPath + "/" + appName + "/")
 
-			iterateJSONAndGenerateCode(updatedJSON, outputPath, "ViewController", appName, debug)
+			testerViewName = fileToBeChanged[:-4]
+
 
 			os.remove(outputPath + "/" + appName + "/" + fileToBeChanged + ".h")
 			os.remove(outputPath + "/" + appName + "/" + fileToBeChanged + ".m")
@@ -127,6 +128,9 @@ def initProject(outputPath, debug, args, appName):
 
 			prepareFiles(outputPath, fileToBeChanged[:-4], "m", appName)
 			prepareFiles(outputPath, fileToBeChanged[:-4], "h", appName)
+
+
+			iterateJSONAndGenerateCode(updatedJSON, outputPath, testerViewName, appName, debug)
 
 			writeJSONToFile(outputPath, updatedJSON, newMeta, fileToBeChanged[:-4])
 
@@ -315,6 +319,7 @@ def iterateJSONAndGenerateCode(data, outputPath, viewName, appName, debug):
 	replaceText(outputPath, "m", viewName, newListeM, newListeMP, appName)
 	replaceText(outputPath, "h", viewName, newListeH, None, appName)
 
+
 """
 	Checks if it is a git repo
 """
@@ -408,14 +413,14 @@ def writeJSONToFile(outputPath, completeList, meta, viewName):
 
 	completeList["meta"] = meta
 
-	json.dump(completeList, f)
+	json.dump(completeList, f, indent=4)
 	f.close()
 	return filePath
 
 """
 	Checks if the elements in the old and new JSON are the same.
 """
-def checkIfCorrectID(newJSON, oldJSON, finalJSONID, threshold):
+def checkIfCorrectID(newJSON, oldJSON, finalJSONID, threshold, widthMeta, heightMeta):
 	threshold = threshold/100
 
 	try:
@@ -431,9 +436,6 @@ def checkIfCorrectID(newJSON, oldJSON, finalJSONID, threshold):
 		for j in oldJSON:
 
 			if(i[1] == j[1] and i[2] == j[2] and i[3] == j[3] and i[6] == j[6] and i[7] == j[7]):
-				print(i)
-				print(" ")
-				print(j)
 				i[0] = j[0]
 				oldJSON.remove(j)
 				isBreak = True
@@ -442,7 +444,7 @@ def checkIfCorrectID(newJSON, oldJSON, finalJSONID, threshold):
 				tempListe.append(j)
 
 		if tempListe:
-			match = percentageMatch(tempListe, i, threshold)
+			match = percentageMatch(tempListe, i, threshold, widthMeta, heightMeta)
 
 			try:
 				i[0] = match[0]
@@ -458,16 +460,17 @@ def checkIfCorrectID(newJSON, oldJSON, finalJSONID, threshold):
 """
 	Generates a percentage match on elements, and set the old ID to the new element if it is the same
 """
-def percentageMatch(tempListe, elementToCheck, THRESHOLD):
-	NUMBER = 250
-
+def percentageMatch(tempListe, elementToCheck, THRESHOLD, widthMeta, heightMeta):
+	#NUMBER = 250
+	print(widthMeta)
+	print(heightMeta)
 	for currentElement in tempListe:
-		percentage = abs((currentElement[2]-elementToCheck[2])/NUMBER) + abs((currentElement[3]-elementToCheck[3])/NUMBER) + abs((currentElement[6]-elementToCheck[6])/NUMBER) + abs((currentElement[7]-elementToCheck[7])/NUMBER)
+		percentage = abs((currentElement[2]-elementToCheck[2])/widthMeta) + abs((currentElement[3]-elementToCheck[3])/heightMeta) + abs((currentElement[6]-elementToCheck[6])/widthMeta) + abs((currentElement[7]-elementToCheck[7])/heightMeta)
 		currentElement.append(percentage)
 
 	tempListe.sort(key=lambda x: x[8])
 
-	if(tempListe[0][10] < TRESHOLD):
+	if(tempListe[0][10] < THRESHOLD):
 		del tempListe[0][-1]
 		return tempListe[0]
 	else:
