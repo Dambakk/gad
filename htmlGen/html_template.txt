@@ -11,7 +11,7 @@
 		<title> $title </title>
 		<link href=$cssLink rel="stylesheet"/>
 	</head>
-	<body>	
-$content 
+	<body>
+$content
 	</body>
 </html>
